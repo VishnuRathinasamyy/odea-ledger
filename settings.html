@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Settings · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content content--narrow" id="content">
+
+        <section class="page-head">
+          <div class="page-head__text">
+            <span class="eyebrow">Workspace</span>
+            <h2>Settings</h2>
+            <p>Budget, categories, team access and the Google Drive connection.</p>
+          </div>
+        </section>
+
+        <p class="note" data-viewer-note hidden><i data-lucide="lock"></i><span>Only admins can change budget, categories and team access. You can still change your appearance and download backups.</span></p>
+
+        <div class="settings">
+          <nav class="settings__nav" aria-label="Settings sections">
+            <a href="#budget" data-requires="admin"><i data-lucide="gauge"></i>Monthly budget</a>
+            <a href="#categories" data-requires="admin"><i data-lucide="tags"></i>Categories</a>
+            <a href="#team" data-requires="admin"><i data-lucide="users"></i>Team access</a>
+            <a href="#drive"><i data-lucide="hard-drive"></i>Google Drive</a>
+            <a href="#appearance"><i data-lucide="palette"></i>Appearance</a>
+            <a href="#data"><i data-lucide="database-backup"></i>Data &amp; backup</a>
+          </nav>
+
+          <div class="settings__body">
+            <!-- Budget -->
+            <section class="panel setting" id="budget" data-requires="admin">
+              <div class="setting__head"><h3>Monthly budget</h3><p>Set a spending limit. The dashboard shows a progress bar and alerts at 80% and 100%.</p></div>
+              <form class="setting__row" id="budget-form">
+                <div class="amount-input amount-input--sm"><span class="amount-input__cur">₹</span><input class="amount-input__field" id="budget-input" inputmode="decimal" placeholder="e.g. 150000 (0 = no budget)"></div>
+                <button class="btn btn--primary" type="submit"><i data-lucide="check"></i>Save budget</button>
+              </form>
+              <p class="field__hint" id="budget-hint"></p>
+            </section>
+
+            <!-- Categories -->
+            <section class="panel setting" id="categories" data-requires="admin">
+              <div class="setting__head"><h3>Categories</h3><p>Shown in the entry form. Removing a category doesn't change past entries.</p></div>
+              <div class="cat-list" id="cat-list"></div>
+              <form class="setting__row" id="cat-form">
+                <input class="input" id="cat-input" maxlength="60" placeholder="New category name, e.g. Courier">
+                <button class="btn btn--dark" type="submit"><i data-lucide="plus"></i>Add</button>
+              </form>
+              <div class="setting__foot"><button class="btn btn--ghost btn--sm" type="button" id="cat-reset"><i data-lucide="rotate-ccw"></i>Restore default list</button></div>
+            </section>
+
+            <!-- Team -->
+            <section class="panel setting" id="team" data-requires="admin">
+              <div class="setting__head"><h3>Team access</h3><p>Only these Google accounts can sign in. <b>Admin</b>: everything · <b>Editor</b>: add &amp; edit entries · <b>Viewer</b>: read only.</p></div>
+              <div class="team" id="team-list"><div class="spinner"></div></div>
+              <form class="setting__row setting__row--wrap" id="team-form">
+                <input class="input" id="team-email" type="email" placeholder="name@gmail.com" required>
+                <select class="select" id="team-role"><option value="editor">Editor</option><option value="viewer">Viewer</option><option value="admin">Admin</option></select>
+                <button class="btn btn--dark" type="submit"><i data-lucide="user-plus"></i>Add member</button>
+              </form>
+            </section>
+
+            <!-- Drive -->
+            <section class="panel setting" id="drive">
+              <div class="setting__head"><h3>Google Drive</h3><p>Bills are uploaded through a small Google Apps Script that owns the bills folder. Files stay private.</p></div>
+              <div class="drive-card" id="drive-card"></div>
+              <ol class="steps" id="drive-steps" hidden>
+                <li>Open <a class="link" href="https://script.google.com" target="_blank" rel="noopener">script.google.com</a> with the company Google account and create a new project.</li>
+                <li>Paste the contents of <code>apps-script/Code.gs</code>, then set the Script Properties <code>FIREBASE_PROJECT_ID</code> (and optionally <code>ROOT_FOLDER_ID</code>).</li>
+                <li>Deploy → New deployment → Web app · Execute as <b>Me</b> · Who has access <b>Anyone</b>.</li>
+                <li>Copy the <code>/exec</code> URL into <code>driveProxyUrl</code> in <code>js/config.js</code> and push to GitHub.</li>
+              </ol>
+            </section>
+
+            <!-- Appearance -->
+            <section class="panel setting" id="appearance">
+              <div class="setting__head"><h3>Appearance</h3><p>Saved on this device only.</p></div>
+              <div class="theme-pick" id="theme-pick" role="radiogroup">
+                <label><input type="radio" name="theme" value="light"><span class="theme-pick__sw theme-pick__sw--light"></span><span>Light</span></label>
+                <label><input type="radio" name="theme" value="dark"><span class="theme-pick__sw theme-pick__sw--dark"></span><span>Dark</span></label>
+                <label><input type="radio" name="theme" value="system"><span class="theme-pick__sw theme-pick__sw--system"></span><span>Match system</span></label>
+              </div>
+            </section>
+
+            <!-- Data -->
+            <section class="panel setting" id="data">
+              <div class="setting__head"><h3>Data &amp; backup</h3><p>Firestore keeps the master copy. Download a full copy any time for your accountant or records.</p></div>
+              <div class="setting__row setting__row--wrap">
+                <button class="btn btn--light" type="button" id="dl-csv"><i data-lucide="sheet"></i>All entries · CSV</button>
+                <button class="btn btn--light" type="button" id="dl-json"><i data-lucide="file-json"></i>Full backup · JSON</button>
+              </div>
+              <dl class="about" id="about"></dl>
+            </section>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/settings.js"></script>
+</body>
+</html>

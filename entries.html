@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Entries · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="content">
+
+        <section class="page-head">
+          <div class="page-head__text">
+            <span class="eyebrow" id="range-eyebrow">This month</span>
+            <h2>All entries</h2>
+            <p>Filter by month or any date range — totals update with every filter.</p>
+          </div>
+          <div class="page-head__actions">
+            <div class="dropdown" id="export-dd">
+              <button class="btn btn--light" type="button"><i data-lucide="download"></i><span>Export</span><i data-lucide="chevron-down" class="ic--xs"></i></button>
+              <div class="dropdown__menu" role="menu">
+                <div class="dropdown__head" id="export-count">Export filtered entries</div>
+                <button class="dropdown__item" type="button" data-export="pdf"><i data-lucide="file-text"></i><span>PDF statement<small class="dd-sub">Branded, print-ready</small></span></button>
+                <button class="dropdown__item" type="button" data-export="csv"><i data-lucide="sheet"></i><span>CSV spreadsheet<small class="dd-sub">Opens in Excel / Sheets</small></span></button>
+              </div>
+            </div>
+            <a class="btn btn--primary" href="add-entry.html" data-requires="write"><i data-lucide="plus"></i><span>New entry</span></a>
+          </div>
+        </section>
+
+        <!-- Filters -->
+        <section class="panel filters" aria-label="Filters">
+          <div class="filters__presets" id="presets" role="tablist" aria-label="Period"></div>
+          <div class="filters__period" id="period-extra">
+            <div class="field field--inline" id="pick-month" hidden>
+              <button type="button" class="icon-btn icon-btn--sm" data-step="-1" aria-label="Previous month"><i data-lucide="chevron-left"></i></button>
+              <input type="month" class="input input--sm" id="f-month" aria-label="Month">
+              <button type="button" class="icon-btn icon-btn--sm" data-step="1" aria-label="Next month"><i data-lucide="chevron-right"></i></button>
+            </div>
+            <div class="field field--inline" id="pick-range" hidden>
+              <input type="date" class="input input--sm" id="f-from" aria-label="From date">
+              <span class="muted">to</span>
+              <input type="date" class="input input--sm" id="f-to" aria-label="To date">
+            </div>
+          </div>
+          <div class="filters__row">
+            <div class="input-group filters__search">
+              <i data-lucide="search" class="ic"></i>
+              <input type="search" class="input input--sm" id="f-q" placeholder="Search title, vendor, client, notes, amount…" data-page-search aria-label="Search entries">
+            </div>
+            <select class="select select--sm" id="f-type" aria-label="Type"><option value="">All types</option><option value="expense">Expenses</option><option value="income">Income</option></select>
+            <select class="select select--sm" id="f-category" aria-label="Category"><option value="">All categories</option></select>
+            <select class="select select--sm" id="f-payment" aria-label="Payment method"><option value="">All methods</option></select>
+            <select class="select select--sm" id="f-client" aria-label="Client"><option value="">All clients</option></select>
+            <select class="select select--sm" id="f-bill" aria-label="Bill"><option value="">Bill: any</option><option value="with">With bill</option><option value="without">Missing bill</option></select>
+            <button class="btn btn--ghost btn--sm" type="button" id="f-clear" hidden><i data-lucide="filter-x"></i>Clear</button>
+          </div>
+        </section>
+
+        <!-- Totals for the filtered set -->
+        <section class="totals" id="totals" aria-live="polite">
+          <div class="total total--expense"><span>Total expenses</span><strong class="money" id="t-exp">—</strong><small id="t-exp-n">&nbsp;</small></div>
+          <div class="total total--income"><span>Total income</span><strong class="money" id="t-inc">—</strong><small id="t-inc-n">&nbsp;</small></div>
+          <div class="total total--net"><span>Net balance</span><strong class="money" id="t-net">—</strong><small>Income − expenses</small></div>
+          <div class="total"><span>Entries</span><strong id="t-count">—</strong><small id="t-avg">&nbsp;</small></div>
+        </section>
+
+        <!-- Table -->
+        <section class="panel">
+          <div class="panel__head table-head">
+            <div><h3 class="panel__title" id="table-title">Entries</h3><p class="panel__sub" id="table-sub">&nbsp;</p></div>
+            <label class="pager-info">Rows <select class="select select--sm" id="f-size" aria-label="Rows per page"></select></label>
+          </div>
+          <div class="panel__body panel__body--flush">
+            <div class="table-wrap">
+              <table class="table table--entries" id="table">
+                <thead>
+                  <tr>
+                    <th>S.No</th>
+                    <th><button class="th-sort" data-sort="date" type="button">Date · Txn ID <i data-lucide="arrow-down-up"></i></button></th>
+                    <th><button class="th-sort" data-sort="title" type="button">Title <i data-lucide="arrow-down-up"></i></button></th>
+                    <th><button class="th-sort" data-sort="category" type="button">Category <i data-lucide="arrow-down-up"></i></button></th>
+                    <th>Type</th>
+                    <th class="t-right"><button class="th-sort" data-sort="amount" type="button">Amount <i data-lucide="arrow-down-up"></i></button></th>
+                    <th class="t-center">Bill</th>
+                    <th>Client / Project</th>
+                    <th>Paid via</th>
+                    <th class="t-right"><span class="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel__foot" id="pager-foot">
+            <span class="pager-info" id="pager-info"></span>
+            <nav class="pager" id="pager" aria-label="Pages"></nav>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/entries.js"></script>
+</body>
+</html>

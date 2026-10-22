@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Monthly reports · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="content">
+
+        <section class="page-head">
+          <div class="month-nav">
+            <button class="icon-btn" type="button" data-step="-1" aria-label="Previous month"><i data-lucide="chevron-left"></i></button>
+            <div class="month-nav__label">
+              <span class="eyebrow">Monthly report</span>
+              <h2 id="r-month">—</h2>
+              <input type="month" id="r-picker" class="month-nav__picker" aria-label="Choose month">
+            </div>
+            <button class="icon-btn" type="button" data-step="1" aria-label="Next month"><i data-lucide="chevron-right"></i></button>
+            <button class="btn btn--ghost btn--sm" type="button" id="r-today" hidden>This month</button>
+          </div>
+          <div class="page-head__actions">
+            <button class="btn btn--light" type="button" id="r-csv"><i data-lucide="sheet"></i><span>CSV</span></button>
+            <button class="btn btn--dark" type="button" id="r-pdf"><i data-lucide="file-down"></i><span>Download PDF</span></button>
+          </div>
+        </section>
+
+        <section class="kpis">
+          <article class="kpi kpi--expense"><div class="kpi__top"><span class="kpi__label">Total expenses</span><span class="kpi__icon"><i data-lucide="arrow-up-right"></i></span></div>
+            <div class="kpi__value money" id="r-exp">—</div><div class="kpi__meta" id="r-exp-d">&nbsp;</div></article>
+          <article class="kpi kpi--income"><div class="kpi__top"><span class="kpi__label">Total income</span><span class="kpi__icon"><i data-lucide="arrow-down-left"></i></span></div>
+            <div class="kpi__value money" id="r-inc">—</div><div class="kpi__meta" id="r-inc-d">&nbsp;</div></article>
+          <article class="kpi kpi--hero"><div class="kpi__top"><span class="kpi__label">Net balance</span><span class="kpi__icon"><i data-lucide="scale"></i></span></div>
+            <div class="kpi__value money" id="r-net">—</div><div class="kpi__meta" id="r-net-d">Income − expenses</div></article>
+          <article class="kpi kpi--info"><div class="kpi__top"><span class="kpi__label">Entries</span><span class="kpi__icon"><i data-lucide="receipt"></i></span></div>
+            <div class="kpi__value" id="r-count">—</div><div class="kpi__meta" id="r-count-d">&nbsp;</div></article>
+        </section>
+
+        <div class="grid grid--2-1">
+          <section class="panel">
+            <div class="panel__head"><div><h3 class="panel__title">Day by day</h3><p class="panel__sub" id="r-daily-sub">Expenses each day with running total</p></div></div>
+            <div class="panel__body"><div class="chart-box" id="r-daily-box"><canvas></canvas></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel__head"><div><h3 class="panel__title">Week by week</h3><p class="panel__sub">Monday to Sunday</p></div></div>
+            <div class="panel__body"><ul class="weeks" id="r-weeks"></ul></div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel__head"><div><h3 class="panel__title">Category breakdown</h3><p class="panel__sub" id="r-cat-sub">Compared with the previous month</p></div></div>
+          <div class="panel__body panel__body--flush"><div class="table-wrap">
+            <table class="table table--compact">
+              <thead><tr><th>Category</th><th class="t-right">This month</th><th class="t-right">Previous</th><th class="t-right">Change</th><th style="width:28%">Share of spend</th></tr></thead>
+              <tbody id="r-cats"></tbody>
+            </table>
+          </div></div>
+        </section>
+
+        <div class="grid grid--3">
+          <section class="panel"><div class="panel__head"><h3 class="panel__title"><i data-lucide="credit-card"></i>Payment methods</h3></div><div class="panel__body"><ol class="rank" id="r-modes"></ol></div></section>
+          <section class="panel"><div class="panel__head"><h3 class="panel__title"><i data-lucide="store"></i>Top payees</h3></div><div class="panel__body"><ol class="rank" id="r-vendors"></ol></div></section>
+          <section class="panel"><div class="panel__head"><h3 class="panel__title"><i data-lucide="briefcase"></i>Clients &amp; projects</h3></div><div class="panel__body"><ol class="rank" id="r-clients"></ol></div></section>
+        </div>
+
+        <section class="panel">
+          <div class="panel__head"><div><h3 class="panel__title">Month history</h3><p class="panel__sub" id="r-hist-sub">Last 12 months — click a month to open its report</p></div></div>
+          <div class="panel__body panel__body--flush"><div class="table-wrap">
+            <table class="table table--compact table--history">
+              <thead><tr><th>Month</th><th class="t-right">Expenses</th><th class="t-right">Income</th><th class="t-right">Net</th><th class="t-right">Entries</th><th class="t-right">Missing bills</th><th style="width:18%">Spend</th></tr></thead>
+              <tbody id="r-history"></tbody>
+              <tfoot id="r-history-foot"></tfoot>
+            </table>
+          </div></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/reports.js"></script>
+</body>
+</html>

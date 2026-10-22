@@ -1,0 +1,11 @@
+{
+  "name": "ODEA Ledger",
+  "short_name": "Ledger",
+  "description": "Office expense and bill management for ODEA Development",
+  "start_url": "dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F3EE",
+  "theme_color": "#14161B",
+  "icons": [{ "src": "assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bills vault · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="content">
+
+        <section class="page-head">
+          <div class="page-head__text">
+            <span class="eyebrow">Google Drive</span>
+            <h2>Bills vault</h2>
+            <p id="vault-sub">Every bill in the company Drive folder, filed by month.</p>
+          </div>
+          <div class="page-head__actions">
+            <button class="btn btn--light" type="button" id="v-refresh"><i data-lucide="refresh-cw"></i><span>Refresh</span></button>
+            <a class="btn btn--dark" id="v-open" target="_blank" rel="noopener" hidden><i data-lucide="external-link"></i><span>Open in Drive</span></a>
+          </div>
+        </section>
+
+        <section class="vault-stats" id="v-stats" hidden>
+          <div class="stat"><span class="stat__label">Bills in Drive</span><strong class="stat__value" id="vs-files">—</strong></div>
+          <div class="stat"><span class="stat__label">Month folders</span><strong class="stat__value" id="vs-folders">—</strong></div>
+          <div class="stat"><span class="stat__label">Storage used</span><strong class="stat__value" id="vs-size">—</strong></div>
+          <div class="stat"><span class="stat__label">Not linked to an entry</span><strong class="stat__value" id="vs-unlinked">—</strong></div>
+        </section>
+
+        <section class="panel vault">
+          <div class="vault__toolbar">
+            <div class="vault__folders" id="v-folders" role="tablist" aria-label="Month folders"></div>
+            <div class="vault__controls">
+              <div class="input-group"><i data-lucide="search" class="ic"></i><input type="search" class="input input--sm" id="v-q" placeholder="Search file name or entry…" data-page-search aria-label="Search bills"></div>
+              <select class="select select--sm" id="v-link" aria-label="Link status"><option value="">All bills</option><option value="linked">Linked to entry</option><option value="unlinked">Not linked</option></select>
+              <select class="select select--sm" id="v-sort" aria-label="Sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="name">Name A–Z</option><option value="size">Largest first</option></select>
+            </div>
+          </div>
+          <div class="vault__grid" id="v-grid"></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/bills.js"></script>
+</body>
+</html>

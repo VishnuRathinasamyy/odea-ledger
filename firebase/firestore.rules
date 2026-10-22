@@ -1,0 +1,85 @@
+rules_version = '2';
+
+// ODEA Ledger — Firestore security rules.
+// These are the real gatekeeper: the website's Firebase config is public, so every
+// read and write is checked here (server-side) — including field-level validation.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Who is calling ----------
+    function signedIn() {
+      return request.auth != null && request.auth.token.email != null && request.auth.token.email_verified == true;
+    }
+    function myEmail() { return request.auth.token.email.lower(); }
+    function profilePath() { return /databases/$(database)/documents/users/$(myEmail()); }
+    function isMember() { return signedIn() && exists(profilePath()); }
+    function myRole() { return get(profilePath()).data.role; }
+    function isAdmin() { return isMember() && myRole() == 'admin'; }
+    function canWrite() { return isMember() && myRole() in ['admin', 'editor']; }
+
+    // ---------- Validation helpers ----------
+    function optStr(d, key, max) { return !(key in d) || (d[key] is string && d[key].size() <= max); }
+    function validBill(b) {
+      return b == null || (b is map
+        && b.keys().hasOnly(['fileId', 'name', 'mimeType', 'size', 'folderName', 'folderId', 'webViewLink'])
+        && b.fileId is string && b.fileId.size() > 5 && b.fileId.size() < 200
+        && (!('webViewLink' in b) || (b.webViewLink is string && b.webViewLink.matches('^https://(drive|docs)\\.google\\.com/.*'))));
+    }
+    function validTransaction(d) {
+      return d.keys().hasAll(['date', 'month', 'type', 'category', 'title', 'amountPaise', 'paymentMethod', 'createdBy', 'createdAt', 'updatedAt'])
+        && d.keys().hasOnly(['refNo', 'date', 'month', 'type', 'category', 'title', 'description', 'amountPaise',
+                             'paymentMethod', 'vendor', 'client', 'project', 'notes', 'gstRate', 'bill',
+                             'createdBy', 'updatedBy', 'createdAt', 'updatedAt'])
+        && d.date is string && d.date.matches('^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
+        && d.month is string && d.month.matches('^20[0-9]{2}-(0[1-9]|1[0-2])$') && d.date.matches('^' + d.month + '-[0-9]{2}$')
+        && d.type in ['expense', 'income']
+        && d.amountPaise is int && d.amountPaise > 0 && d.amountPaise <= 10000000000     // ≤ ₹10 crore
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 120
+        && d.category is string && d.category.size() > 0 && d.category.size() <= 60
+        && d.paymentMethod is string && d.paymentMethod.size() > 0 && d.paymentMethod.size() <= 30
+        && optStr(d, 'refNo', 20) && optStr(d, 'description', 1000) && optStr(d, 'vendor', 120)
+        && optStr(d, 'client', 80) && optStr(d, 'project', 80) && optStr(d, 'notes', 2000)
+        && (!('gstRate' in d) || d.gstRate in [0, 5, 12, 18, 28])
+        && (!('bill' in d) || validBill(d.bill));
+    }
+
+    // ---------- Transactions ----------
+    match /transactions/{id} {
+      allow read: if isMember();
+      allow create: if canWrite()
+        && validTransaction(request.resource.data)
+        && request.resource.data.createdBy == myEmail()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if canWrite()
+        && validTransaction(request.resource.data)
+        && request.resource.data.createdBy == resource.data.createdBy      // history can't be rewritten
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedBy == myEmail()
+        && request.resource.data.updatedAt == request.time;
+      // Admins can delete anything; editors only what they entered themselves.
+      allow delete: if isAdmin() || (canWrite() && resource.data.createdBy == myEmail());
+    }
+
+    // ---------- Settings ----------
+    match /settings/{docId} {
+      allow read: if isMember();
+      allow write: if isAdmin() && docId == 'app'
+        && request.resource.data.keys().hasOnly(['categories', 'monthlyBudgetPaise', 'updatedBy', 'updatedAt'])
+        && (!('categories' in request.resource.data) || (request.resource.data.categories is list && request.resource.data.categories.size() <= 60))
+        && (!('monthlyBudgetPaise' in request.resource.data) || (request.resource.data.monthlyBudgetPaise is int && request.resource.data.monthlyBudgetPaise >= 0));
+    }
+
+    // ---------- Team (document id = lowercase email) ----------
+    match /users/{email} {
+      // You can always read your own profile (needed to find out if you're a member).
+      allow read: if signedIn() && (email == myEmail() || isMember());
+      allow create, update: if isAdmin()
+        && request.resource.data.role in ['admin', 'editor', 'viewer']
+        && request.resource.data.keys().hasOnly(['role', 'name', 'addedBy', 'addedAt'])
+        && email == email.lower()
+        && email != myEmail();            // admins can't demote themselves by accident
+      allow delete: if isAdmin() && email != myEmail();
+    }
+  }
+}

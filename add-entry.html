@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>New entry · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content content--narrow" id="content">
+
+        <section class="page-head">
+          <div class="page-head__text">
+            <span class="eyebrow" id="form-eyebrow">New entry</span>
+            <h2 id="form-title">Record a payment</h2>
+            <p id="form-sub">Fill the basics, attach the bill, save. Fields marked <span class="req-dot">*</span> are required.</p>
+          </div>
+          <div class="page-head__actions">
+            <a class="btn btn--ghost" href="entries.html" id="cancel-top"><i data-lucide="x"></i><span>Cancel</span></a>
+          </div>
+        </section>
+
+        <form class="entry-form" id="entry-form" novalidate autocomplete="off">
+          <div class="entry-form__main">
+
+            <!-- 1. Amount & basics -->
+            <section class="panel form-section">
+              <header class="form-section__head"><span class="step">1</span><div><h3>Amount &amp; date</h3><p>Type a number or a sum like <code>1200+350*2</code></p></div></header>
+              <div class="form-grid">
+                <div class="field field--full">
+                  <span class="field__label">Entry type <span class="req">*</span></span>
+                  <div class="segmented segmented--type segmented--lg" role="radiogroup" aria-label="Entry type">
+                    <label><input type="radio" name="type" value="expense" checked><span><i data-lucide="arrow-up-right"></i>Expense · money out</span></label>
+                    <label><input type="radio" name="type" value="income"><span><i data-lucide="arrow-down-left"></i>Income · money in</span></label>
+                  </div>
+                </div>
+
+                <div class="field field--amount field--full" data-field="amount">
+                  <label class="field__label" for="amount">Amount <span class="req">*</span></label>
+                  <div class="amount-input">
+                    <span class="amount-input__cur">₹</span>
+                    <input class="amount-input__field" id="amount" name="amount" inputmode="decimal" placeholder="0.00" aria-describedby="amount-calc amount-err">
+                    <span class="amount-input__badge" id="calc-badge" hidden><i data-lucide="calculator"></i>calc</span>
+                  </div>
+                  <div class="amount-calc" id="amount-calc" aria-live="polite"></div>
+                  <div class="quick-add" aria-label="Quick add">
+                    <button type="button" data-add="10">+10</button><button type="button" data-add="50">+50</button><button type="button" data-add="100">+100</button>
+                    <button type="button" data-add="500">+500</button><button type="button" data-add="1000">+1,000</button><button type="button" data-add="clear" class="quick-add__clear">Clear</button>
+                  </div>
+                  <span class="field__error" id="amount-err"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+
+                <div class="field" data-field="date">
+                  <label class="field__label" for="date">Date <span class="req">*</span></label>
+                  <input class="input" type="date" id="date" name="date" required>
+                  <div class="date-quick"><button type="button" data-day="0">Today</button><button type="button" data-day="-1">Yesterday</button></div>
+                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+
+                <div class="field" data-field="paymentMethod">
+                  <label class="field__label" for="paymentMethod">Paid via <span class="req">*</span></label>
+                  <select class="select" id="paymentMethod" name="paymentMethod"></select>
+                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+              </div>
+            </section>
+
+            <!-- 2. What was it -->
+            <section class="panel form-section">
+              <header class="form-section__head"><span class="step">2</span><div><h3>What was it for?</h3><p>Payees you have used before are remembered</p></div></header>
+              <div class="form-grid">
+                <div class="field field--full" data-field="title">
+                  <label class="field__label" for="title">Title <span class="req">*</span></label>
+                  <input class="input" id="title" name="title" maxlength="120" placeholder="e.g. October office rent, Printer toner, Meta ads top-up">
+                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+                <div class="field" data-field="category">
+                  <label class="field__label" for="category">Category <span class="req">*</span></label>
+                  <select class="select" id="category" name="category"></select>
+                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+                <div class="field" data-field="vendor">
+                  <label class="field__label" for="vendor">Paid to / Vendor <span class="opt">optional</span></label>
+                  <input class="input" id="vendor" name="vendor" maxlength="120" list="dl-vendor" placeholder="Who received the money?">
+                  <datalist id="dl-vendor"></datalist>
+                  <span class="field__hint" id="vendor-hint"></span>
+                </div>
+                <div class="field" data-field="gstRate">
+                  <label class="field__label" for="gstRate">GST included <span class="opt">optional</span></label>
+                  <select class="select" id="gstRate" name="gstRate"></select>
+                  <span class="field__hint" id="gst-hint">For bills with a GST invoice</span>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="client">Client <span class="opt">optional</span></label>
+                  <input class="input" id="client" name="client" maxlength="80" list="dl-client" placeholder="Leave empty for office spend">
+                  <datalist id="dl-client"></datalist>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="project">Project / campaign <span class="opt">optional</span></label>
+                  <input class="input" id="project" name="project" maxlength="80" list="dl-project" placeholder="e.g. Diwali campaign">
+                  <datalist id="dl-project"></datalist>
+                </div>
+                <div class="field field--full">
+                  <label class="field__label" for="description">Description <span class="opt">optional</span></label>
+                  <textarea class="textarea" id="description" name="description" maxlength="1000" rows="3" placeholder="Anything that explains this payment"></textarea>
+                </div>
+                <div class="field field--full">
+                  <label class="field__label" for="notes">Additional notes <span class="opt">optional</span></label>
+                  <textarea class="textarea" id="notes" name="notes" maxlength="2000" rows="2" placeholder="Invoice no., approval, reimbursement status…"></textarea>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Right column -->
+          <aside class="entry-form__side">
+            <section class="panel form-section" id="bill">
+              <header class="form-section__head"><span class="step">3</span><div><h3>Bill / receipt</h3><p id="bill-sub">Saved to Google Drive in this month's folder</p></div></header>
+              <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Attach bill">
+                <input type="file" id="bill-input" accept="image/*,application/pdf" hidden>
+                <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+                <div class="dropzone__empty">
+                  <span class="dropzone__icon"><i data-lucide="image-up"></i></span>
+                  <strong>Drop the bill here</strong>
+                  <span>or <u>browse</u> · paste with Ctrl+V</span>
+                  <small>JPG, PNG, WEBP or PDF · up to 10 MB · photos are compressed automatically</small>
+                </div>
+                <div class="dropzone__file" hidden>
+                  <div class="dropzone__preview"></div>
+                  <div class="dropzone__meta"><strong></strong><span></span></div>
+                  <div class="dropzone__actions">
+                    <button type="button" class="btn btn--light btn--sm" data-act="replace"><i data-lucide="refresh-cw"></i>Replace</button>
+                    <button type="button" class="icon-btn icon-btn--sm icon-btn--danger" data-act="remove" aria-label="Remove bill"><i data-lucide="trash-2"></i></button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn--dark btn--block camera-btn" id="camera-btn"><i data-lucide="camera"></i>Take a photo of the bill</button>
+              <p class="drive-warn" id="drive-warn" hidden><i data-lucide="alert-triangle"></i><span>Google Drive is not connected yet, so bills can't be uploaded. Entries still save.</span></p>
+            </section>
+
+            <!-- Live receipt preview -->
+            <section class="receipt" aria-label="Entry preview">
+              <div class="receipt__head"><span>Preview</span><span id="pv-ref">New</span></div>
+              <div class="receipt__amount" id="pv-amount">₹0.00</div>
+              <div class="receipt__type" id="pv-type">Expense</div>
+              <dl class="receipt__rows">
+                <div><dt>Date</dt><dd id="pv-date">—</dd></div>
+                <div><dt>Category</dt><dd id="pv-cat">—</dd></div>
+                <div><dt>Paid to</dt><dd id="pv-vendor">—</dd></div>
+                <div><dt>Via</dt><dd id="pv-mode">—</dd></div>
+                <div id="pv-gst-row" hidden><dt>Base + GST</dt><dd id="pv-gst">—</dd></div>
+                <div><dt>Bill</dt><dd id="pv-bill">Not attached</dd></div>
+              </dl>
+              <div class="receipt__folder" id="pv-folder"><i data-lucide="folder"></i><span>—</span></div>
+            </section>
+
+            <div class="form-actions" id="form-actions">
+              <div class="save-status" id="save-status" hidden><span class="spinner"></span><span>Saving…</span></div>
+              <button type="submit" class="btn btn--primary btn--lg btn--block" id="save-btn"><i data-lucide="check"></i><span>Save entry</span><kbd class="kbd-light">Ctrl ↵</kbd></button>
+              <div class="form-actions__row">
+                <button type="button" class="btn btn--light" id="save-another"><i data-lucide="copy-plus"></i>Save &amp; add another</button>
+                <button type="reset" class="btn btn--ghost" id="reset-btn"><i data-lucide="rotate-ccw"></i>Reset</button>
+              </div>
+            </div>
+          </aside>
+        </form>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/add-entry.js"></script>
+</body>
+</html>
