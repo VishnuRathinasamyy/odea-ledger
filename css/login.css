@@ -23,7 +23,7 @@
 /* ---------- Story (left) ---------- */
 .lg-story { padding: 44px 56px; display: flex; flex-direction: column; gap: 36px; min-width: 0; }
 .lg-brand { display: flex; align-items: center; gap: 12px; }
-.lg-brand__mark { width: 40px; height: 40px; filter: drop-shadow(0 8px 20px rgba(241,90,34,.45)); }
+.lg-brand__mark { width: 40px; height: 40px; filter: drop-shadow(0 8px 20px rgba(124,92,255,.4)); }
 .lg-brand span { display: flex; flex-direction: column; line-height: 1.15; }
 .lg-brand strong { font-size: 18px; letter-spacing: -.02em; }
 .lg-brand small { color: #8D919B; font-weight: 500; font-size: 12.5px; }
@@ -87,7 +87,7 @@
   animation: lg-in .6s cubic-bezier(.2,.7,.2,1) both;
 }
 @keyframes lg-in { from { opacity: 0; transform: translateY(16px) scale(.98); } }
-.lg-signin__mark { width: 56px; height: 56px; filter: drop-shadow(0 12px 22px rgba(241,90,34,.35)); }
+.lg-signin__mark { width: 88px; height: 88px; filter: drop-shadow(0 14px 26px rgba(124,92,255,.35)); }
 .lg-signin h2 { font-size: 28px; letter-spacing: -.03em; margin-top: 20px; }
 .lg-signin__sub { color: #5A5E68; margin-top: 6px; font-size: 15px; }
 

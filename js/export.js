@@ -62,6 +62,21 @@ async function loadFonts() {
   return fontCache;
 }
 
+let logoCache;
+async function loadLogo() {
+  if (logoCache !== undefined) return logoCache;
+  try {
+    const blob = await (await fetch(new URL('../assets/icon-192.png', import.meta.url))).blob();
+    logoCache = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
+  } catch { logoCache = null; }
+  return logoCache;
+}
+/** App logo in the PDF header (falls back to a plain orange tile if the image can't load). */
+function drawLogo(pdf, logo, x, y, size) {
+  if (logo) { try { pdf.addImage(logo, 'PNG', x, y, size, size); return; } catch { /* fall through */ } }
+  pdf.setFillColor(241, 90, 34); pdf.roundedRect(x, y, size, size, 5, 5, 'F');
+}
+
 // Palette (RGB)
 const INK = [20, 22, 27], ACCENT = [241, 90, 34], MUTED = [110, 114, 124], LINE = [228, 226, 219],
   SOFT = [248, 247, 243], RED = [200, 52, 52], GREEN = [14, 140, 96];
@@ -74,6 +89,7 @@ const INK = [20, 22, 27], ACCENT = [241, 90, 34], MUTED = [110, 114, 124], LINE 
 export async function exportPDF({ title = 'Financial Statement', period = '', rows, filtersText = '', preparedBy = '', fileName = 'statement' }) {
   const jsPDF = await loadJsPDF();
   const fonts = await loadFonts();
+  const logo = await loadLogo();
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
   let F = 'helvetica';
   if (fonts) {
@@ -92,9 +108,7 @@ export async function exportPDF({ title = 'Financial Statement', period = '', ro
     pdf.setFillColor(...ACCENT); pdf.rect(0, first ? 92 : 46, W, 3, 'F');
     // logo mark
     const ly = first ? 28 : 12;
-    pdf.setFillColor(...ACCENT); pdf.roundedRect(M, ly, 22, 22, 5, 5, 'F');
-    pdf.setFillColor(...INK); pdf.circle(M + 11, ly + 11, 5.2, 'F');
-    pdf.setFillColor(...ACCENT); pdf.circle(M + 11, ly + 11, 2.4, 'F');
+    drawLogo(pdf, logo, M, ly, 22);
     pdf.setTextColor(255, 255, 255); pdf.setFont(F, 'bold'); pdf.setFontSize(first ? 13 : 11);
     pdf.text(CONFIG.companyName, M + 32, ly + (first ? 10 : 15));
     if (first) {
@@ -234,6 +248,7 @@ export function exportClientReportCSV(summary, month) {
 export async function exportClientReportPDF(summary, month, { preparedBy = '' } = {}) {
   const jsPDF = await loadJsPDF();
   const fonts = await loadFonts();
+  const logo = await loadLogo();
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
   let F = 'helvetica';
   if (fonts) {
@@ -248,9 +263,7 @@ export async function exportClientReportPDF(summary, month, { preparedBy = '' } 
     pdf.setFillColor(...INK); pdf.rect(0, 0, W, first ? 92 : 46, 'F');
     pdf.setFillColor(...ACCENT); pdf.rect(0, first ? 92 : 46, W, 3, 'F');
     const ly = first ? 28 : 12;
-    pdf.setFillColor(...ACCENT); pdf.roundedRect(M, ly, 22, 22, 5, 5, 'F');
-    pdf.setFillColor(...INK); pdf.circle(M + 11, ly + 11, 5.2, 'F');
-    pdf.setFillColor(...ACCENT); pdf.circle(M + 11, ly + 11, 2.4, 'F');
+    drawLogo(pdf, logo, M, ly, 22);
     pdf.setTextColor(255, 255, 255); pdf.setFont(F, 'bold'); pdf.setFontSize(first ? 13 : 11);
     pdf.text(CONFIG.companyName, M + 32, ly + (first ? 10 : 15));
     if (first) {

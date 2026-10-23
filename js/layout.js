@@ -10,11 +10,7 @@ import { summarize } from './filters.js';
 import { esc, initials, longToday, currentMonthKey, formatINR, pct } from './utils.js';
 import { ic, icons, openModal } from './ui.js';
 
-export const LOGO_SVG = `<svg viewBox="0 0 32 32" class="logo-mark" aria-hidden="true">
-  <rect width="32" height="32" rx="8" fill="var(--accent)"/>
-  <circle cx="16" cy="16" r="8.2" fill="none" stroke="#14161B" stroke-width="3.4"/>
-  <circle cx="16" cy="16" r="2.6" fill="#14161B"/>
-  <path d="M22.5 9.5 L26 6" stroke="#14161B" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+export const LOGO_SVG = `<img src="assets/logo.svg" class="logo-mark" alt="" width="34" height="34">`;
 
 const NAV = [
   { group: 'Overview', items: [
