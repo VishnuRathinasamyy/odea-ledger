@@ -21,13 +21,16 @@ watchTransactions((list) => { tx = list; loaded = true; render(); }, (err) => {
 });
 document.addEventListener('themechange', () => loaded && render());
 
-function go(month) { mk = month; history.replaceState(null, '', `?month=${mk}`); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function go(month) { mk = month; history.replaceState(null, '', `?month=${mk}${scope ? `&scope=${scope}` : ''}`); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 document.querySelectorAll('.month-nav [data-step]').forEach((b) => b.addEventListener('click', () => go(addMonths(mk, Number(b.dataset.step)))));
 $('r-picker').addEventListener('change', (e) => e.target.value && go(e.target.value));
 $('r-today').addEventListener('click', () => go(currentMonthKey()));
 $('r-month').addEventListener('click', () => $('r-picker').showPicker?.());
 
-const inMonth = (m) => tx.filter((t) => t.date.startsWith(m));
+let scope = ['office', 'client'].includes(qp('scope')) ? qp('scope') : '';
+const inMonth = (m) => tx.filter((t) => t.date.startsWith(m) && (!scope || (t.scope || 'office') === scope));
+document.getElementById('r-scope').value = scope;
+document.getElementById('r-scope').addEventListener('change', (e) => { scope = e.target.value; const p = new URLSearchParams(location.search); scope ? p.set('scope', scope) : p.delete('scope'); history.replaceState(null, '', p.toString() ? `?${p}` : location.pathname); render(); });
 
 function render() {
   const prev = addMonths(mk, -1);
@@ -54,8 +57,8 @@ function render() {
   renderWeeks(cur);
   renderCategories(cur, last);
   $('r-modes').innerHTML = rankList(groupTotals(cur, (t) => t.paymentMethod), { emptyText: 'No expenses this month' });
-  $('r-vendors').innerHTML = rankList(groupTotals(cur, (t) => t.vendor), { emptyText: 'No payees recorded' });
-  $('r-clients').innerHTML = rankList(groupTotals(cur, (t) => [t.client, t.project].filter(Boolean).join(' · ') || 'Internal / office'), { emptyText: 'No expenses this month' });
+  $('r-vendors').innerHTML = rankList(groupTotals(cur, (t) => t.vendor || (t.scope === 'client' ? `${t.clientName} (client)` : 'Payee not entered')), { emptyText: 'No payees recorded' });
+  $('r-clients').innerHTML = rankList(groupTotals(cur, (t) => (t.scope === 'client' ? t.clientName : t.client) || 'ODEA office'), { emptyText: 'No expenses this month' });
   renderHistory();
   icons(document.getElementById('content'));
 }
@@ -125,7 +128,7 @@ function renderHistory() {
       <td><div class="share__bar share__bar--thin"><span style="width:${(s.expense / max) * 100}%"></span></div></td>
     </tr>`).join('');
   const fy = financialYear();
-  const fyS = summarize(tx.filter((t) => t.date >= fy.from && t.date <= fy.to));
+  const fyS = summarize(tx.filter((t) => t.date >= fy.from && t.date <= fy.to && (!scope || (t.scope || 'office') === scope)));
   $('r-history-foot').innerHTML = `<tr><td>${fy.label} so far</td><td class="t-right money amount--expense">${formatINR(fyS.expense)}</td><td class="t-right money amount--income">${formatINR(fyS.income)}</td>
     <td class="t-right money ${fyS.net < 0 ? 'amount--expense' : 'amount--income'}">${(fyS.net < 0 ? '−' : '') + formatINR(Math.abs(fyS.net))}</td><td class="t-right">${fyS.count}</td><td class="t-right">${fyS.missingBills || '—'}</td><td></td></tr>`;
 }

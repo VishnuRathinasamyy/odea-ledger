@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
   <link rel="stylesheet" href="css/responsive.css">
   <script src="js/theme-init.js"></script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
@@ -40,6 +41,7 @@
             <button class="btn btn--ghost btn--sm" type="button" id="r-today" hidden>This month</button>
           </div>
           <div class="page-head__actions">
+            <select class="select" id="r-scope" aria-label="Show"><option value="">Office + clients</option><option value="office">ODEA office only</option><option value="client">Clients only</option></select>
             <button class="btn btn--light" type="button" id="r-csv"><i data-lucide="sheet"></i><span>CSV</span></button>
             <button class="btn btn--dark" type="button" id="r-pdf"><i data-lucide="file-down"></i><span>Download PDF</span></button>
           </div>

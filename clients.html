@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Clients · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="content">
+
+        <section class="page-head">
+          <div class="month-nav">
+            <button class="icon-btn" type="button" data-step="-1" aria-label="Previous month"><i data-lucide="chevron-left"></i></button>
+            <div class="month-nav__label">
+              <span class="eyebrow">Client payments</span>
+              <h2 id="c-month">—</h2>
+              <input type="month" id="c-picker" class="month-nav__picker" aria-label="Choose month">
+            </div>
+            <button class="icon-btn" type="button" data-step="1" aria-label="Next month"><i data-lucide="chevron-right"></i></button>
+            <button class="btn btn--ghost btn--sm" type="button" id="c-today" hidden>This month</button>
+          </div>
+          <div class="page-head__actions">
+            <div class="dropdown" id="c-export">
+              <button class="btn btn--light" type="button"><i data-lucide="download"></i><span>Export</span><i data-lucide="chevron-down" class="ic--xs"></i></button>
+              <div class="dropdown__menu" role="menu">
+                <div class="dropdown__head">Client report for this month</div>
+                <button class="dropdown__item" type="button" data-export="pdf"><i data-lucide="file-text"></i><span>PDF report<small class="dd-sub">Fees, payments, spend, balance</small></span></button>
+                <button class="dropdown__item" type="button" data-export="csv"><i data-lucide="sheet"></i><span>CSV spreadsheet<small class="dd-sub">One row per client</small></span></button>
+              </div>
+            </div>
+            <button class="btn btn--light" type="button" id="c-add" data-requires="admin"><i data-lucide="user-plus"></i><span>Add client</span></button>
+            <button class="btn btn--primary" type="button" id="c-pay" data-requires="write"><i data-lucide="hand-coins"></i><span>Record payment</span></button>
+          </div>
+        </section>
+
+        <section class="kpis" aria-label="This month">
+          <article class="kpi"><div class="kpi__top"><span class="kpi__label">Expected this month</span><span class="kpi__icon"><i data-lucide="calendar-clock"></i></span></div>
+            <div class="kpi__value money" id="k-exp">—</div><div class="kpi__meta" id="k-exp-m">&nbsp;</div></article>
+          <article class="kpi kpi--hero"><div class="kpi__top"><span class="kpi__label">Received</span><span class="kpi__icon"><i data-lucide="hand-coins"></i></span></div>
+            <div class="kpi__value money" id="k-rec">—</div>
+            <div class="budget"><div class="meter"><div class="meter__fill" id="k-rec-bar" style="width:0"></div></div><div class="kpi__meta" id="k-rec-m">&nbsp;</div></div></article>
+          <article class="kpi kpi--expense"><div class="kpi__top"><span class="kpi__label">Still to collect</span><span class="kpi__icon"><i data-lucide="hourglass"></i></span></div>
+            <div class="kpi__value money" id="k-rem">—</div><div class="kpi__meta" id="k-rem-m">&nbsp;</div></article>
+          <article class="kpi"><div class="kpi__top"><span class="kpi__label">Client balance</span><span class="kpi__icon"><i data-lucide="scale"></i></span></div>
+            <div class="kpi__value money" id="k-bal">—</div><div class="kpi__meta" id="k-bal-m">Received − spent on clients</div></article>
+        </section>
+
+        <section class="panel">
+          <div class="ctabs">
+            <div class="segmented" role="tablist" aria-label="View">
+              <button type="button" class="is-active" data-view="status">Payment status</button>
+              <button type="button" data-view="monthly">Monthly report</button>
+              <button type="button" data-view="weekly">Weekly report</button>
+            </div>
+            <div class="ctabs__tools" id="c-tools">
+              <div class="filters__presets" id="c-chips"></div>
+              <div class="input-group"><i data-lucide="search" class="ic"></i><input type="search" class="input input--sm" id="c-q" placeholder="Search clients…" data-page-search aria-label="Search clients"></div>
+            </div>
+          </div>
+          <div id="c-body"></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/clients.js"></script>
+</body>
+</html>

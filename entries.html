@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
   <link rel="stylesheet" href="css/responsive.css">
   <script src="js/theme-init.js"></script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
@@ -66,7 +67,8 @@
               <i data-lucide="search" class="ic"></i>
               <input type="search" class="input input--sm" id="f-q" placeholder="Search title, vendor, client, notes, amount…" data-page-search aria-label="Search entries">
             </div>
-            <select class="select select--sm" id="f-type" aria-label="Type"><option value="">All types</option><option value="expense">Expenses</option><option value="income">Income</option></select>
+            <select class="select select--sm" id="f-scope" aria-label="Office or client"><option value="">Office + clients</option><option value="office">ODEA office</option><option value="client">Clients</option></select>
+            <select class="select select--sm" id="f-type" aria-label="Type"><option value="">All types</option><option value="expense">Expenses</option><option value="income">Income / payments</option></select>
             <select class="select select--sm" id="f-category" aria-label="Category"><option value="">All categories</option></select>
             <select class="select select--sm" id="f-payment" aria-label="Payment method"><option value="">All methods</option></select>
             <select class="select select--sm" id="f-client" aria-label="Client"><option value="">All clients</option></select>
@@ -101,7 +103,7 @@
                     <th>Type</th>
                     <th class="t-right"><button class="th-sort" data-sort="amount" type="button">Amount <i data-lucide="arrow-down-up"></i></button></th>
                     <th class="t-center">Bill</th>
-                    <th>Client / Project</th>
+                    <th>For</th>
                     <th>Paid via</th>
                     <th class="t-right"><span class="sr-only">Actions</span></th>
                   </tr>

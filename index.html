@@ -6,7 +6,7 @@
   <title>Sign in · ODEA Ledger</title>
   <meta name="description" content="ODEA Ledger — office expense and bill management for ODEA Development.">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="theme-color" content="#14161B">
+  <meta name="theme-color" content="#0E0F12">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,51 +14,75 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/pages.css">
-  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="css/login.css">
   <script src="js/theme-init.js"></script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
 </head>
 <body class="login-body">
-  <main class="login">
-    <section class="login__story" aria-hidden="true">
-      <div class="login__brand">
-        <svg viewBox="0 0 32 32" class="logo-mark"><rect width="32" height="32" rx="8" fill="#F15A22"/><circle cx="16" cy="16" r="8.2" fill="none" stroke="#14161B" stroke-width="3.4"/><circle cx="16" cy="16" r="2.6" fill="#14161B"/><path d="M22.5 9.5 L26 6" stroke="#14161B" stroke-width="2.4" stroke-linecap="round"/></svg>
+  <div class="lg-bg" aria-hidden="true"><span class="lg-orb lg-orb--1"></span><span class="lg-orb lg-orb--2"></span></div>
+
+  <main class="lg">
+    <!-- Left: brand story -->
+    <section class="lg-story">
+      <div class="lg-brand">
+        <svg viewBox="0 0 32 32" class="lg-brand__mark" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#F15A22"/><circle cx="16" cy="16" r="8.2" fill="none" stroke="#14161B" stroke-width="3.4"/><circle cx="16" cy="16" r="2.6" fill="#14161B"/><path d="M22.5 9.5 L26 6" stroke="#14161B" stroke-width="2.4" stroke-linecap="round"/></svg>
         <span><strong>ODEA Ledger</strong><small>ODEA Development</small></span>
       </div>
 
-      <div class="login__pitch">
-        <span class="eyebrow">Office finance desk</span>
-        <h1>Every rupee spent,<br>with the bill to prove it.</h1>
-        <p>Log office payments in seconds, attach the bill from your phone, and let the ledger do the maths — monthly totals, budgets and statements included.</p>
+      <div class="lg-pitch">
+        <h1>Every rupee spent,<br><em>with the bill to prove it.</em></h1>
+        <p>Office payments, bills and monthly totals — all in one place.</p>
       </div>
 
-      <ul class="login__points">
-        <li><i data-lucide="calculator"></i><span><strong>Amounts that calculate</strong>Type 1200+350×2 and it works out the total.</span></li>
-        <li><i data-lucide="folder-tree"></i><span><strong>Bills filed by month</strong>Saved straight to Google Drive, one folder per month.</span></li>
-        <li><i data-lucide="file-down"></i><span><strong>Statements on demand</strong>Any filter, exported as CSV or a branded PDF.</span></li>
-      </ul>
-    </section>
-
-    <section class="login__panel">
-      <div class="login__card">
-        <div class="login__card-head">
-          <h2>Sign in</h2>
-          <p>Use your company Google account. Only people added by an admin can open the ledger.</p>
+      <!-- Illustrative product vignette (decorative) -->
+      <div class="lg-stage" aria-hidden="true">
+        <div class="lg-card lg-card--receipt">
+          <div class="lg-receipt__top"><span class="lg-dot"></span><span>New entry</span><span class="lg-chip">Expense</span></div>
+          <div class="lg-receipt__amt">₹1,900<small>.00</small></div>
+          <div class="lg-receipt__title">Printer toner &amp; A4 paper</div>
+          <div class="lg-receipt__rows">
+            <span><i data-lucide="tag"></i>Office Supplies</span>
+            <span><i data-lucide="smartphone"></i>UPI</span>
+          </div>
+          <div class="lg-receipt__bill"><span class="lg-thumb"><i data-lucide="image"></i></span><span><b>bill.jpg</b><small>Attached</small></span><i data-lucide="check-circle-2" class="lg-ok"></i></div>
         </div>
 
-        <div class="login__alert" id="login-alert" hidden></div>
+        <div class="lg-card lg-card--calc">
+          <i data-lucide="calculator"></i><span>1200 + 350 × 2</span><b>= ₹1,900</b>
+        </div>
 
-        <button class="btn btn--light btn--lg btn--block google-btn" id="google-btn" type="button">
-          <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.5z"/></svg>
+        <div class="lg-card lg-card--folder">
+          <span class="lg-folder"><i data-lucide="folder"></i></span>
+          <span><small>Google Drive</small><b>2026-10 October</b></span>
+        </div>
+
+        <div class="lg-card lg-card--chart">
+          <small>This month</small>
+          <div class="lg-bars"><span style="height:38%"></span><span style="height:62%"></span><span style="height:46%"></span><span style="height:80%"></span><span style="height:55%"></span><span style="height:92%" class="is-hi"></span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: sign in -->
+    <section class="lg-panel">
+      <div class="lg-signin">
+        <svg viewBox="0 0 32 32" class="lg-signin__mark" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#F15A22"/><circle cx="16" cy="16" r="8.2" fill="none" stroke="#14161B" stroke-width="3.4"/><circle cx="16" cy="16" r="2.6" fill="#14161B"/><path d="M22.5 9.5 L26 6" stroke="#14161B" stroke-width="2.4" stroke-linecap="round"/></svg>
+        <h2>Welcome back</h2>
+        <p class="lg-signin__sub">Sign in to continue to ODEA Ledger</p>
+
+        <div class="lg-alert" id="login-alert" role="alert" hidden></div>
+
+        <button class="lg-google" id="google-btn" type="button">
+          <svg viewBox="0 0 48 48" width="22" height="22" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.5z"/></svg>
           <span>Continue with Google</span>
         </button>
 
-        <div class="login__secure"><i data-lucide="shield-check"></i><span>Protected by Firebase Authentication. Financial data is only readable by approved team members.</span></div>
+        <div class="lg-secure"><i data-lucide="lock"></i><span>For ODEA team members only</span></div>
       </div>
-      <p class="login__foot">© <span id="year"></span> ODEA Development · Sundarapuram, Coimbatore</p>
+      <p class="lg-foot">© <span id="year"></span> ODEA Development · Coimbatore</p>
     </section>
   </main>
+
   <div id="toasts" class="toasts" aria-live="polite"></div>
   <script type="module" src="js/pages/login.js"></script>
 </body>

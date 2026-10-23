@@ -1,9 +1,11 @@
 import { boot, getTheme, setTheme } from '../layout.js';
 import { CONFIG, isDriveConfigured } from '../config.js';
-import { watchSettings, saveSettings, listUsers, saveUser, removeUser, watchTransactions, explainError } from '../store.js';
+import { watchSettings, saveSettings, listUsers, saveUser, removeUser, watchTransactions, watchClients, deleteClient, explainError } from '../store.js';
+import { openClientForm, openFeeForm, toggleArchive, clientAvatar } from '../client-ui.js';
+import { currentFee } from '../clients-lib.js';
 import { pingDrive } from '../drive.js';
 import { roleLabel } from '../auth.js';
-import { esc, evaluateExpression, toPaise, formatINR, initials, todayISO } from '../utils.js';
+import { esc, evaluateExpression, toPaise, fromPaise, formatINR, initials, todayISO } from '../utils.js';
 import { icons, ic, toast, confirmDialog, busy } from '../ui.js';
 import { exportCSV, download } from '../export.js';
 
@@ -31,28 +33,36 @@ $('budget-form').addEventListener('submit', async (e) => {
   finally { done(); }
 });
 
-/* ---------------- Categories ---------------- */
+/* ---------------- Categories (office + client lists) ---------------- */
+let catKey = 'categories';
+const catList = () => settings[catKey] || [];
+document.querySelectorAll('[data-catlist]').forEach((b) => b.addEventListener('click', () => {
+  catKey = b.dataset.catlist;
+  document.querySelectorAll('[data-catlist]').forEach((x) => x.classList.toggle('is-active', x === b));
+  $('cat-input').placeholder = catKey === 'clientCategories' ? 'New client category, e.g. Drone shoot' : 'New category name, e.g. Courier';
+  renderCategories();
+}));
 function renderCategories() {
   if (!settings) return;
-  const used = new Map(); tx.forEach((t) => used.set(t.category, (used.get(t.category) || 0) + 1));
-  $('cat-list').innerHTML = settings.categories.map((c, i) => `
+  const used = new Map(); tx.filter((t) => (catKey === 'clientCategories') === (t.scope === 'client')).forEach((t) => used.set(t.category, (used.get(t.category) || 0) + 1));
+  $('cat-list').innerHTML = catList().map((c, i) => `
     <span class="cat-pill" draggable="true" data-i="${i}">${ic('grip-vertical', 'ic--xs cat-pill__grip')}<span>${esc(c)}</span>
       ${used.get(c) ? `<small>${used.get(c)}</small>` : ''}
       <button type="button" data-remove="${i}" aria-label="Remove ${esc(c)}">${ic('x', 'ic--xs')}</button></span>`).join('');
   icons($('cat-list'));
 }
-watchTransactions((list) => { tx = list; renderCategories(); });
+watchTransactions((list) => { tx = list; renderCategories(); renderClients(); });
 
 async function saveCats(list, msg) {
-  try { await saveSettings({ categories: list }); if (msg) toast(msg, 'success', { duration: 2500 }); }
+  try { await saveSettings({ [catKey]: list }); if (msg) toast(msg, 'success', { duration: 2500 }); }
   catch (err) { toast('Could not save categories', 'error', { detail: explainError(err) }); }
 }
 $('cat-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const name = $('cat-input').value.trim().replace(/\s+/g, ' ');
   if (!name) return;
-  if (settings.categories.some((c) => c.toLowerCase() === name.toLowerCase())) return toast('That category already exists', 'warning');
-  const list = [...settings.categories];
+  if (catList().some((c) => c.toLowerCase() === name.toLowerCase())) return toast('That category already exists', 'warning');
+  const list = [...catList()];
   const other = list.indexOf('Other');
   other >= 0 ? list.splice(other, 0, name) : list.push(name);   // keep "Other" last
   $('cat-input').value = '';
@@ -60,10 +70,10 @@ $('cat-form').addEventListener('submit', (e) => {
 });
 $('cat-list').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-remove]'); if (!b) return;
-  const name = settings.categories[Number(b.dataset.remove)];
-  if (settings.categories.length <= 1) return toast('Keep at least one category', 'warning');
+  const name = catList()[Number(b.dataset.remove)];
+  if (catList().length <= 1) return toast('Keep at least one category', 'warning');
   if (!(await confirmDialog({ title: `Remove “${esc(name)}”?`, message: 'It will disappear from the entry form. Existing entries keep this category.', confirmText: 'Remove', danger: true }))) return;
-  saveCats(settings.categories.filter((c) => c !== name), `Removed “${name}”`);
+  saveCats(catList().filter((c) => c !== name), `Removed “${name}”`);
 });
 // Drag to reorder
 let dragFrom = null;
@@ -72,13 +82,44 @@ $('cat-list').addEventListener('dragover', (e) => e.preventDefault());
 $('cat-list').addEventListener('drop', (e) => {
   e.preventDefault(); const p = e.target.closest('[data-i]'); if (p == null || dragFrom == null) return;
   const to = Number(p.dataset.i); if (to === dragFrom) return;
-  const list = [...settings.categories]; const [m] = list.splice(dragFrom, 1); list.splice(to, 0, m); dragFrom = null;
+  const list = [...catList()]; const [m] = list.splice(dragFrom, 1); list.splice(to, 0, m); dragFrom = null;
   saveCats(list);
 });
 $('cat-list').addEventListener('dragend', () => { dragFrom = null; $('cat-list').querySelectorAll('.is-dragging').forEach((x) => x.classList.remove('is-dragging')); });
 $('cat-reset').addEventListener('click', async () => {
   if (await confirmDialog({ title: 'Restore default categories?', message: 'Your custom categories will be replaced by the default list. Past entries are not changed.', confirmText: 'Restore' }))
-    saveCats([...CONFIG.defaultCategories], 'Default categories restored');
+    saveCats([...(catKey === 'clientCategories' ? CONFIG.clientCategories : CONFIG.defaultCategories)], 'Default categories restored');
+});
+
+/* ---------------- Clients ---------------- */
+let clientsList = [];
+function renderClients() {
+  if (!ctx.isAdmin) return;
+  const counts = new Map(); tx.forEach((t) => { if (t.clientId) counts.set(t.clientId, (counts.get(t.clientId) || 0) + 1); });
+  $('client-list').innerHTML = clientsList.length ? clientsList.slice().sort((a, b) => a.archived - b.archived || a.name.localeCompare(b.name)).map((c) => `
+    <div class="clist__row ${c.archived ? 'is-archived' : ''}" data-id="${c.id}">
+      ${clientAvatar(c)}
+      <div class="clist__who"><strong>${esc(c.name)}${c.archived ? ' <span class="tag">Archived</span>' : ''}</strong>
+        <small>${formatINR(fromPaise(currentFee(c)))} / month · ${counts.get(c.id) || 0} entries${c.dueDay ? ` · due by ${c.dueDay}` : ''}</small></div>
+      <button type="button" class="btn btn--ghost btn--sm" data-c="fee">${ic('indian-rupee')}Fee</button>
+      <button type="button" class="icon-btn icon-btn--sm" data-c="edit" title="Edit" aria-label="Edit ${esc(c.name)}">${ic('pencil')}</button>
+      <button type="button" class="icon-btn icon-btn--sm" data-c="archive" title="${c.archived ? 'Restore' : 'Archive'}" aria-label="${c.archived ? 'Restore' : 'Archive'}">${ic(c.archived ? 'archive-restore' : 'archive')}</button>
+      ${counts.get(c.id) ? '' : `<button type="button" class="icon-btn icon-btn--sm icon-btn--danger" data-c="delete" title="Delete" aria-label="Delete">${ic('trash-2')}</button>`}
+    </div>`).join('') : '';
+  icons($('client-list'));
+}
+watchClients((l) => { clientsList = l; renderClients(); });
+$('client-add').addEventListener('click', () => openClientForm(null, { existingNames: clientsList.map((c) => c.name) }));
+$('client-list').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  const c = clientsList.find((x) => x.id === b.closest('[data-id]').dataset.id);
+  if (b.dataset.c === 'edit') openClientForm(c, { existingNames: clientsList.map((x) => x.name) });
+  if (b.dataset.c === 'fee') openFeeForm(c);
+  if (b.dataset.c === 'archive') toggleArchive(c);
+  if (b.dataset.c === 'delete') {
+    if (!(await confirmDialog({ title: `Delete ${esc(c.name)}?`, danger: true, confirmText: 'Delete client', message: 'This client has no entries, so it can be removed completely.' }))) return;
+    try { await deleteClient(c.id); toast('Client deleted', 'success'); } catch (err) { toast('Could not delete', 'error', { detail: explainError(err) }); }
+  }
 });
 
 /* ---------------- Team ---------------- */

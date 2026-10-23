@@ -2,7 +2,7 @@
  * Reusable rendered pieces shared by several pages:
  * bill cells, ranked lists, delta badges, entry detail modal, delete flow.
  */
-import { esc, formatINR, formatDate, formatDateTime, pct } from './utils.js';
+import { esc, formatINR, formatDate, formatDateTime, pct, monthLabel } from './utils.js';
 import { ic, icons, openModal, openLightbox, confirmDialog, toast, attachHoverPreview, busy } from './ui.js';
 import { getBillURL, driveViewUrl, trashBill, isDriveConfigured } from './drive.js';
 import { deleteTransaction, restoreTransaction, explainError } from './store.js';
@@ -75,6 +75,7 @@ export const canDeleteEntry = (ctx, t) => !!ctx && (ctx.isAdmin || (ctx.canWrite
 export function openEntryDetail(t, ctx = {}) {
   const canWrite = !!ctx.canWrite;
   const canDelete = canDeleteEntry(ctx, t);
+  const isPay = t.scope === 'client' && t.type === 'income';
   const row = (label, value, full = false) => value ? `<div class="detail__item ${full ? 'detail__item--full' : ''}"><dt>${label}</dt><dd>${esc(value)}</dd></div>` : '';
   const gst = t.gstRate ? (t.amount * t.gstRate) / (100 + t.gstRate) : 0;
   const { el, close } = openModal({
@@ -90,7 +91,8 @@ export function openEntryDetail(t, ctx = {}) {
         ${row('Category', t.category)}
         ${row('Paid to / Vendor', t.vendor)}
         ${row('Payment method', t.paymentMethod)}
-        ${row('Client', t.client)}${row('Project', t.project)}
+        ${row('For', t.scope === 'client' ? `Client · ${t.clientName || t.client || ''}` : 'ODEA office')}
+        ${t.forMonth ? row('Payment for', monthLabel(t.forMonth)) : (!t.scope ? row('Client', t.client) : '')}${row('Project', t.project)}
         ${t.gstRate ? row('GST', `${t.gstRate}% · ${formatINR(gst)} included`) : ''}
         ${row('Description', t.description, true)}
         ${row('Notes', t.notes, true)}
@@ -98,14 +100,15 @@ export function openEntryDetail(t, ctx = {}) {
       ${t.bill?.fileId ? `<div class="detail-bill" data-open-bill><div class="spinner"></div></div>
         <div class="detail-bill__meta">${ic('folder')}<span>Drive › ${esc(t.bill.folderName || 'Bills')} › ${esc(t.bill.name || '')}</span>
         <a class="link" href="${esc(t.bill.webViewLink || driveViewUrl(t.bill.fileId))}" target="_blank" rel="noopener">Open in Drive ${ic('external-link', 'ic--xs')}</a></div>`
-      : `<div class="detail-nobill">${ic('file-x-2')}<span>No bill attached to this entry.</span>${canWrite ? `<a class="link" href="add-entry.html?id=${encodeURIComponent(t.id)}#bill">Attach one</a>` : ''}</div>`}
+      : isPay ? '' : `<div class="detail-nobill">${ic('file-x-2')}<span>No bill attached to this entry.</span>${canWrite ? `<a class="link" href="add-entry.html?id=${encodeURIComponent(t.id)}#bill">Attach one</a>` : ''}</div>`}
       <div class="audit"><span>Entered by ${esc(t.createdBy || '—')} · ${formatDateTime(t.createdAtDate)}</span>
         ${t.updatedBy && t.updatedAtDate && Math.abs(t.updatedAtDate - t.createdAtDate) > 2000 ? `<span>Last edited by ${esc(t.updatedBy)} · ${formatDateTime(t.updatedAtDate)}</span>` : ''}</div>`,
     footer: canWrite ? `
       ${canDelete ? `<button class="btn btn--ghost btn--sm" data-act="delete" type="button">${ic('trash-2')}Delete</button>` : ''}
       <span style="flex:1"></span>
-      <a class="btn btn--light btn--sm" href="add-entry.html?dup=${encodeURIComponent(t.id)}">${ic('copy')}Duplicate</a>
-      <a class="btn btn--dark btn--sm" href="add-entry.html?id=${encodeURIComponent(t.id)}">${ic('pencil')}Edit</a>` : '',
+      ${isPay ? `<a class="btn btn--dark btn--sm" href="client.html?id=${encodeURIComponent(t.clientId)}">${ic('external-link')}Open client</a>`
+      : `<a class="btn btn--light btn--sm" href="add-entry.html?dup=${encodeURIComponent(t.id)}">${ic('copy')}Duplicate</a>
+      <a class="btn btn--dark btn--sm" href="add-entry.html?id=${encodeURIComponent(t.id)}">${ic('pencil')}Edit</a>`}` : '',
   });
   const billBox = el.querySelector('[data-open-bill]');
   if (billBox) {

@@ -26,7 +26,7 @@ export const CONFIG = {
   },
 
   /** Google Apps Script web-app URL (ends with /exec). Handles bill uploads to Drive. */
-  driveProxyUrl: 'https://script.google.com/macros/s/AKfycbyWYXKZmtR5GwXe13znm1TzD_i9EX_I9YG07XabR3GaVo1gjXr8_WjK1X6oLUdTkeGA/exec',
+  driveProxyUrl: 'https://script.google.com/macros/s/AKfycby49RnZcDtKRKaUdglWki2Rwt_RqU1cpOR-bE9GdS0KsA12Fn7d3CoIOUu1j19qcX8g/exec',
 
   /** All dates are calculated in this timezone so entries never slip into the wrong month. */
   timezone: 'Asia/Kolkata',

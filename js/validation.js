@@ -28,6 +28,7 @@ export function validateEntry(v, { categories = [] } = {}) {
   if (!v.paymentMethod) errors.paymentMethod = 'Choose how it was paid';
   else if (!CONFIG.paymentMethods.includes(v.paymentMethod)) errors.paymentMethod = 'Unknown payment method';
   if (v.gstRate && !CONFIG.gstRates.includes(Number(v.gstRate))) errors.gstRate = 'Unknown GST rate';
+  if (v.scope === 'client' && !v.clientId) errors.clientId = 'Choose the client';
 
   return { valid: Object.keys(errors).length === 0, errors, amount: calc.ok ? calc.value : null };
 }

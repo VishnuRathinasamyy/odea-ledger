@@ -45,6 +45,14 @@ All figures are calculated from the live database. Nothing is hard-coded and the
 
 ---
 
+## Clients (fixed monthly fees)
+
+- **Settings → Clients**: add each client with their fixed monthly fee, billing start month and optional due day. Change a fee any time — past months keep the old fee (fee history).
+- **Client payments** page: every client's status for the month — Paid / Partially paid / Not paid / Overdue — with Record payment (full or partial, any number per month), Mark paid, and Undo on everything.
+- **Client expense** form: pick the client from the dropdown; it shows what they paid this month, what's been spent, what's left, and what will be left after this expense (red when negative).
+- **Balance** = received from the client − spent on the client. Monthly and weekly reports, CSV and PDF export.
+- Office expenses stay separate (**Office expense** form) and the office budget only counts office spending.
+
 ## Setup (about 20 minutes)
 
 ### 1. Firebase project (database + sign-in)

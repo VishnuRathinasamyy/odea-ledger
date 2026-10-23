@@ -13,6 +13,12 @@ import {
 import { CONFIG } from './config.js';
 import { fromPaise } from './utils.js';
 
+// Fallback so an older js/config.js (without clientCategories) keeps working.
+if (!Array.isArray(CONFIG.clientCategories)) {
+  CONFIG.clientCategories = ['Shoot & Production', 'Ad Spend', 'Talent / Models', 'Location & Props', 'Editing & Post',
+    'Travel', 'Food & Hospitality', 'Printing', 'Equipment Rent', 'Other'];
+}
+
 const txCol = () => collection(db, 'transactions');
 const me = () => (auth.currentUser?.email || '').toLowerCase();
 
@@ -97,7 +103,7 @@ export function restoreTransaction(tx) {
 }
 
 /* ---------------- Settings ---------------- */
-export const DEFAULT_SETTINGS = () => ({ categories: [...CONFIG.defaultCategories], monthlyBudgetPaise: 0 });
+export const DEFAULT_SETTINGS = () => ({ categories: [...CONFIG.defaultCategories], clientCategories: [...CONFIG.clientCategories], monthlyBudgetPaise: 0 });
 let settingsCache = null, settingsUnsub = null;
 const settingsListeners = new Set();
 
@@ -110,6 +116,7 @@ export function watchSettings(onData) {
       settingsCache = {
         ...DEFAULT_SETTINGS(), ...d,
         categories: Array.isArray(d.categories) && d.categories.length ? d.categories : [...CONFIG.defaultCategories],
+        clientCategories: Array.isArray(d.clientCategories) && d.clientCategories.length ? d.clientCategories : [...CONFIG.clientCategories],
         monthlyBudget: fromPaise(d.monthlyBudgetPaise || 0),
       };
       settingsListeners.forEach((fn) => fn(settingsCache));
@@ -124,6 +131,44 @@ export function watchSettings(onData) {
 
 export function saveSettings(patch) {
   return commit(setDoc(doc(db, 'settings', 'app'), { ...patch, updatedBy: me(), updatedAt: serverTimestamp() }, { merge: true }));
+}
+
+/* ---------------- Clients ----------------
+ * clients/{autoId}: name, feeHistory [{ from: 'YYYY-MM', feePaise }], startMonth, dueDay,
+ *                   contactName, phone, notes, archivedFrom ('YYYY-MM' | null)
+ */
+let clientsCache = null, clientsError = null, clientsUnsub = null;
+const clientListeners = new Set();
+
+function normalizeClient(snap) {
+  const d = snap.data();
+  const feeHistory = (Array.isArray(d.feeHistory) ? d.feeHistory : []).slice().sort((a, b) => a.from.localeCompare(b.from));
+  return { id: snap.id, ...d, feeHistory, archived: !!d.archivedFrom };
+}
+
+export function watchClients(onData, onError) {
+  clientListeners.add({ onData, onError });
+  if (clientsCache) onData(clientsCache);
+  if (clientsError) onError?.(clientsError);
+  if (!clientsUnsub) {
+    clientsUnsub = onSnapshot(collection(db, 'clients'), (snap) => {
+      clientsError = null;
+      clientsCache = snap.docs.map(normalizeClient).sort((a, b) => a.name.localeCompare(b.name));
+      clientListeners.forEach((l) => l.onData(clientsCache));
+    }, (err) => { clientsError = err; clientListeners.forEach((l) => l.onError?.(err)); });
+  }
+  return () => clientListeners.forEach((l) => { if (l.onData === onData) clientListeners.delete(l); });
+}
+export const cachedClients = () => clientsCache || [];
+
+export function createClient(data) {
+  return commit(addDoc(collection(db, 'clients'), { ...data, archivedFrom: null, createdBy: me(), updatedBy: me(), createdAt: serverTimestamp(), updatedAt: serverTimestamp() }));
+}
+export function updateClient(id, data) {
+  return commit(updateDoc(doc(db, 'clients', id), { ...data, updatedBy: me(), updatedAt: serverTimestamp() }));
+}
+export function deleteClient(id) {
+  return commit(deleteDoc(doc(db, 'clients', id)));
 }
 
 /* ---------------- Users & roles ---------------- */

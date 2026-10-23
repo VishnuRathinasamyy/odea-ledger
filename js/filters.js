@@ -22,7 +22,7 @@ export const PRESETS = [
 
 export const defaultFilters = () => ({
   preset: 'month', month: monthKey(todayISO()), from: '', to: '',
-  type: '', category: '', payment: '', client: '', bill: '', q: '',
+  scope: '', type: '', category: '', payment: '', client: '', bill: '', q: '',
   sort: 'date', dir: 'desc', page: 1, size: 25,
 });
 
@@ -60,14 +60,15 @@ export function applyFilters(list, f) {
   const q = (f.q || '').trim().toLowerCase();
   const out = list.filter((t) => {
     if (r && (t.date < r.from || t.date > r.to)) return false;
+    if (f.scope && (t.scope || 'office') !== f.scope) return false;
     if (f.type && t.type !== f.type) return false;
     if (f.category && t.category !== f.category) return false;
     if (f.payment && t.paymentMethod !== f.payment) return false;
-    if (f.client && (t.client || '') !== f.client) return false;
+    if (f.client && (t.clientName || t.client || '') !== f.client) return false;
     if (f.bill === 'with' && !t.bill?.fileId) return false;
     if (f.bill === 'without' && t.bill?.fileId) return false;
     if (q) {
-      const hay = [t.title, t.vendor, t.client, t.project, t.description, t.notes, t.category, t.refNo, t.paymentMethod, String(t.amount)]
+      const hay = [t.title, t.vendor, t.clientName, t.client, t.project, t.description, t.notes, t.category, t.refNo, t.paymentMethod, String(t.amount)]
         .join(' ').toLowerCase();
       if (!q.split(/\s+/).every((w) => hay.includes(w))) return false;
     }
@@ -120,6 +121,7 @@ export function groupTotals(list, keyFn, { type = 'expense' } = {}) {
 /** Human summary of the active filters, used in exports. */
 export function describeFilters(f) {
   const bits = [rangeLabel(f)];
+  if (f.scope) bits.push(f.scope === 'client' ? 'Client money' : 'Office only');
   if (f.type) bits.push(f.type === 'income' ? 'Income only' : 'Expenses only');
   if (f.category) bits.push(`Category: ${f.category}`);
   if (f.payment) bits.push(`Paid via ${f.payment}`);
@@ -130,7 +132,7 @@ export function describeFilters(f) {
 }
 
 /* ---------------- URL sync (so filters survive refresh / can be bookmarked) ---------------- */
-const KEYS = ['preset', 'month', 'from', 'to', 'type', 'category', 'payment', 'client', 'bill', 'q', 'sort', 'dir', 'page', 'size'];
+const KEYS = ['preset', 'month', 'from', 'to', 'scope', 'type', 'category', 'payment', 'client', 'bill', 'q', 'sort', 'dir', 'page', 'size'];
 export function filtersFromURL(base = defaultFilters()) {
   const p = new URLSearchParams(location.search);
   const f = { ...base };

@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
   <link rel="stylesheet" href="css/responsive.css">
   <script src="js/theme-init.js"></script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
@@ -43,7 +44,7 @@
         <!-- Required summary cards -->
         <section class="kpis" aria-label="Summary">
           <article class="kpi kpi--hero">
-            <div class="kpi__top"><span class="kpi__label">Expenses this month</span><span class="kpi__icon"><i data-lucide="wallet"></i></span></div>
+            <div class="kpi__top"><span class="kpi__label">Office expenses this month</span><span class="kpi__icon"><i data-lucide="wallet"></i></span></div>
             <div class="kpi__value money" id="k-month">—</div>
             <div class="budget" id="k-budget">
               <div class="meter"><div class="meter__fill" style="width:0"></div></div>
@@ -56,21 +57,21 @@
             <div class="kpi__meta" id="k-today-meta">&nbsp;</div>
           </article>
           <article class="kpi">
-            <div class="kpi__top"><span class="kpi__label">Expenses last month</span><span class="kpi__icon"><i data-lucide="history"></i></span></div>
+            <div class="kpi__top"><span class="kpi__label">Office expenses last month</span><span class="kpi__icon"><i data-lucide="history"></i></span></div>
             <div class="kpi__value money" id="k-last">—</div>
             <div class="kpi__meta" id="k-last-meta">&nbsp;</div>
           </article>
           <article class="kpi kpi--info">
-            <div class="kpi__top"><span class="kpi__label">Entries this month</span><span class="kpi__icon"><i data-lucide="receipt"></i></span></div>
-            <div class="kpi__value" id="k-count">—</div>
+            <div class="kpi__top"><span class="kpi__label">Client payments received</span><span class="kpi__icon"><i data-lucide="hand-coins"></i></span></div>
+            <div class="kpi__value money" id="k-count">—</div>
             <div class="kpi__meta" id="k-count-meta">&nbsp;</div>
           </article>
         </section>
 
         <!-- Secondary stats -->
         <section class="stat-strip" aria-label="More figures">
-          <div class="stat"><span class="stat__label">Income this month</span><strong class="stat__value amount--income money" id="s-income">—</strong></div>
-          <div class="stat"><span class="stat__label">Net balance</span><strong class="stat__value money" id="s-net">—</strong></div>
+          <div class="stat"><span class="stat__label">Spent on clients</span><strong class="stat__value money" id="s-income">—</strong></div>
+          <div class="stat"><span class="stat__label">Net cash flow</span><strong class="stat__value money" id="s-net">—</strong></div>
           <div class="stat"><span class="stat__label">Average per day</span><strong class="stat__value money" id="s-avg">—</strong></div>
           <div class="stat"><span class="stat__label">GST in expenses</span><strong class="stat__value money" id="s-gst">—</strong></div>
           <div class="stat"><span class="stat__label">Bills attached</span><strong class="stat__value" id="s-bills">—</strong></div>
@@ -109,8 +110,8 @@
             <div class="panel__body"><ol class="rank" id="rank-vendor"></ol></div>
           </section>
           <section class="panel">
-            <div class="panel__head"><h3 class="panel__title"><i data-lucide="briefcase"></i>Spend by client</h3></div>
-            <div class="panel__body"><ol class="rank" id="rank-client"></ol></div>
+            <div class="panel__head"><h3 class="panel__title"><i data-lucide="briefcase"></i>Client payments</h3><a href="clients.html" class="link">All clients <i data-lucide="arrow-right" class="ic--xs"></i></a></div>
+            <div class="panel__body panel__body--list"><ul class="cmini" id="rank-client"></ul></div>
           </section>
           <section class="panel">
             <div class="panel__head"><h3 class="panel__title"><i data-lucide="credit-card"></i>Payment methods</h3></div>

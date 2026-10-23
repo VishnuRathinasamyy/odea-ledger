@@ -3,7 +3,8 @@
  * jsPDF is loaded on demand so normal page loads stay light.
  */
 import { CONFIG } from './config.js';
-import { formatDate, formatDateTime, formatNumber, todayISO, slug } from './utils.js';
+import { formatDate, formatDateTime, formatNumber, todayISO, slug, monthLabel } from './utils.js';
+import { STATUS } from './clients-lib.js';
 import { summarize, groupTotals } from './filters.js';
 import { driveViewUrl } from './drive.js';
 
@@ -16,12 +17,12 @@ const csvCell = (v) => {
 const gstOf = (t) => (t.gstRate ? Math.round((t.amountPaise * t.gstRate) / (100 + t.gstRate)) / 100 : 0);
 
 export function exportCSV(rows, { name = 'transactions' } = {}) {
-  const head = ['S.No', 'Transaction ID', 'Date', 'Type', 'Category', 'Title', 'Description', 'Paid To / Vendor', 'Client', 'Project',
+  const head = ['S.No', 'Transaction ID', 'Date', 'Type', 'For', 'Client', 'Payment For Month', 'Category', 'Title', 'Description', 'Paid To / Vendor', 'Project',
     'Payment Method', 'Amount (INR)', 'GST %', 'GST Amount (INR)', 'Bill (Google Drive)', 'Bill Folder', 'Notes', 'Entered By'];
   const lines = [head.map(csvCell).join(',')];
   rows.forEach((t, i) => lines.push([
-    i + 1, t.refNo || t.id, t.date, t.type === 'income' ? 'Income' : 'Expense', t.category, t.title, t.description, t.vendor,
-    t.client, t.project, t.paymentMethod, Number(t.amount.toFixed(2)), t.gstRate || 0, gstOf(t),
+    i + 1, t.refNo || t.id, t.date, t.type === 'income' ? 'Income' : 'Expense', t.scope === 'client' ? 'Client' : 'Office',
+    t.clientName || t.client || '', t.forMonth || '', t.category, t.title, t.description, t.vendor, t.project, t.paymentMethod, Number(t.amount.toFixed(2)), t.gstRate || 0, gstOf(t),
     t.bill?.fileId ? (t.bill.webViewLink || driveViewUrl(t.bill.fileId)) : '', t.bill?.folderName || '', t.notes, t.createdBy,
   ].map(csvCell).join(',')));
   // BOM so Excel opens UTF-8 (₹, Tamil names) correctly
@@ -217,4 +218,105 @@ export async function exportPDF({ title = 'Financial Statement', period = '', ro
     pdf.text(`Page ${i} of ${total}`, W - M, H - 14, { align: 'right' });
   }
   pdf.save(`${slug(CONFIG.appName)}_${slug(fileName)}_${todayISO()}.pdf`);
+}
+
+
+/* ---------------- Client report (one month) ---------------- */
+export function exportClientReportCSV(summary, month) {
+  const head = ['Client', 'Month', 'Fixed fee (INR)', 'Received (INR)', 'Remaining (INR)', 'Status', 'Payments', 'Spent on client (INR)', 'Balance (INR)'];
+  const lines = [head.map(csvCell).join(',')];
+  summary.rows.forEach((r) => lines.push([r.client.name, month, r.expected, r.received, r.remaining, STATUS[r.status]?.label || r.status,
+    r.payments.map((p) => `${p.date} ${p.amount}`).join(' | '), r.spent, r.balance].map(csvCell).join(',')));
+  lines.push(['TOTAL', month, summary.expected, summary.received, summary.remaining, `${summary.pct.toFixed(0)}% collected`, '', summary.spent, summary.balance].map(csvCell).join(','));
+  download(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }), `${slug(CONFIG.appName)}_clients_${month}.csv`);
+}
+
+export async function exportClientReportPDF(summary, month, { preparedBy = '' } = {}) {
+  const jsPDF = await loadJsPDF();
+  const fonts = await loadFonts();
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4', compress: true });
+  let F = 'helvetica';
+  if (fonts) {
+    pdf.addFileToVFS('Manrope-Regular.ttf', fonts.regular); pdf.addFont('Manrope-Regular.ttf', 'Manrope', 'normal');
+    pdf.addFileToVFS('Manrope-Bold.ttf', fonts.bold); pdf.addFont('Manrope-Bold.ttf', 'Manrope', 'bold');
+    F = 'Manrope';
+  }
+  const money = (n) => `${n < 0 ? '− ' : ''}${fonts ? '₹' : 'Rs. '}${formatNumber(Math.abs(n))}`;
+  const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight(), M = 36;
+  const title = 'Client Payment Report', period = monthLabel(month);
+  const header = (first) => {
+    pdf.setFillColor(...INK); pdf.rect(0, 0, W, first ? 92 : 46, 'F');
+    pdf.setFillColor(...ACCENT); pdf.rect(0, first ? 92 : 46, W, 3, 'F');
+    const ly = first ? 28 : 12;
+    pdf.setFillColor(...ACCENT); pdf.roundedRect(M, ly, 22, 22, 5, 5, 'F');
+    pdf.setFillColor(...INK); pdf.circle(M + 11, ly + 11, 5.2, 'F');
+    pdf.setFillColor(...ACCENT); pdf.circle(M + 11, ly + 11, 2.4, 'F');
+    pdf.setTextColor(255, 255, 255); pdf.setFont(F, 'bold'); pdf.setFontSize(first ? 13 : 11);
+    pdf.text(CONFIG.companyName, M + 32, ly + (first ? 10 : 15));
+    if (first) {
+      pdf.setFont(F, 'normal'); pdf.setFontSize(8.5); pdf.setTextColor(190, 192, 198); pdf.text(`${CONFIG.appName} · Clients`, M + 32, ly + 22);
+      pdf.setFont(F, 'bold'); pdf.setFontSize(18); pdf.setTextColor(255, 255, 255); pdf.text(title, W - M, 44, { align: 'right' });
+      pdf.setFont(F, 'normal'); pdf.setFontSize(9.5); pdf.setTextColor(...ACCENT); pdf.text(period, W - M, 62, { align: 'right' });
+    } else {
+      pdf.setFont(F, 'normal'); pdf.setFontSize(9); pdf.setTextColor(190, 192, 198); pdf.text(`${title} · ${period}`, W - M, 27, { align: 'right' });
+    }
+  };
+  header(true);
+  let y = 118;
+  pdf.setFont(F, 'normal'); pdf.setFontSize(8.5); pdf.setTextColor(...MUTED);
+  pdf.text(`Generated ${formatDateTime(new Date())}${preparedBy ? `  ·  by ${preparedBy}` : ''}`, M, y);
+
+  y += 14;
+  const due = summary.rows.filter((r) => r.expectedPaise).length;
+  const tiles = [
+    ['EXPECTED', money(summary.expected), INK, `${due} client${due === 1 ? '' : 's'} on a fixed fee`],
+    ['RECEIVED', money(summary.received), GREEN, `${summary.pct.toFixed(0)}% collected`],
+    ['STILL TO COLLECT', money(summary.remaining), RED, `${summary.count(['unpaid', 'partial', 'overdue'])} not fully paid`],
+    ['CLIENT BALANCE', money(summary.balance), summary.balance < 0 ? RED : GREEN, `${money(summary.spent)} spent on clients`],
+  ];
+  const gap = 12, tw = (W - M * 2 - gap * 3) / 4, th = 64;
+  tiles.forEach(([label, value, color, sub], i) => {
+    const x = M + i * (tw + gap);
+    pdf.setFillColor(...SOFT); pdf.setDrawColor(...LINE); pdf.setLineWidth(0.6); pdf.roundedRect(x, y, tw, th, 6, 6, 'FD');
+    pdf.setFillColor(...color); pdf.rect(x, y + 10, 2.5, th - 20, 'F');
+    pdf.setFont(F, 'bold'); pdf.setFontSize(7.5); pdf.setTextColor(...MUTED); pdf.text(label, x + 14, y + 19);
+    pdf.setFontSize(16); pdf.setTextColor(...color); pdf.text(value, x + 14, y + 40);
+    pdf.setFont(F, 'normal'); pdf.setFontSize(8); pdf.setTextColor(...MUTED); pdf.text(sub, x + 14, y + 54);
+  });
+  y += th + 24;
+
+  const rows = summary.rows.slice().sort((a, b) => a.client.name.localeCompare(b.client.name));
+  pdf.setFont(F, 'bold'); pdf.setFontSize(10); pdf.setTextColor(...INK); pdf.text(`Clients (${rows.length})`, M, y);
+  pdf.autoTable({
+    startY: y + 8, margin: { left: M, right: M, top: 64, bottom: 40 }, theme: 'plain', showFoot: 'lastPage', rowPageBreak: 'avoid',
+    head: [['Client', 'Fixed fee', 'Received', 'Remaining', 'Status', 'Payments', 'Spent', 'Balance']],
+    body: rows.map((r) => [r.client.name, money(r.expected), money(r.received), money(r.remaining), STATUS[r.status]?.label || '',
+      r.payments.map((p) => `${formatDate(p.date).slice(0, 6)}: ${money(p.amount)}`).join('\n') || '—', money(r.spent), money(r.balance)]),
+    foot: [['Total', money(summary.expected), money(summary.received), money(summary.remaining), `${summary.pct.toFixed(0)}% collected`, '', money(summary.spent), money(summary.balance)]],
+    styles: { font: F, fontSize: 8.4, textColor: INK, cellPadding: 6, lineColor: LINE, lineWidth: { bottom: 0.5 }, valign: 'middle' },
+    headStyles: { font: F, fontStyle: 'bold', fillColor: INK, textColor: [255, 255, 255], fontSize: 8 },
+    footStyles: { font: F, fontStyle: 'bold', fillColor: SOFT, textColor: INK, fontSize: 9 },
+    alternateRowStyles: { fillColor: [251, 250, 247] },
+    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 'auto' }, 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { cellWidth: 80 }, 5: { cellWidth: 130, fontSize: 7.6, textColor: MUTED }, 6: { halign: 'right' }, 7: { halign: 'right', fontStyle: 'bold' } },
+    didParseCell: (d) => {
+      const r = rows[d.row.index];
+      if (d.section === 'body' && d.column.index === 2) d.cell.styles.textColor = GREEN;
+      if (d.section === 'body' && d.column.index === 3 && r.remainingPaise) d.cell.styles.textColor = RED;
+      if (d.section === 'body' && d.column.index === 7) d.cell.styles.textColor = r.balancePaise < 0 ? RED : GREEN;
+      if (d.section === 'body' && d.column.index === 4) d.cell.styles.textColor = { income: GREEN, warning: [180, 120, 0], expense: RED }[STATUS[r.status]?.tone] || MUTED;
+      if (d.section === 'foot' && [1, 2, 3, 6, 7].includes(d.column.index)) d.cell.styles.halign = 'right';
+      if (d.section === 'foot' && d.column.index === 7) d.cell.styles.textColor = summary.balance < 0 ? RED : GREEN;
+    },
+    didDrawPage: (d) => { if (d.pageNumber > 1) header(false); },
+  });
+
+  const total = pdf.internal.getNumberOfPages();
+  for (let i = 1; i <= total; i++) {
+    pdf.setPage(i);
+    pdf.setDrawColor(...LINE); pdf.setLineWidth(0.5); pdf.line(M, H - 26, W - M, H - 26);
+    pdf.setFont(F, 'normal'); pdf.setFontSize(7.5); pdf.setTextColor(...MUTED);
+    pdf.text(`${CONFIG.companyName} · Confidential · Balance = received − spent on the client`, M, H - 14);
+    pdf.text(`Page ${i} of ${total}`, W - M, H - 14, { align: 'right' });
+  }
+  pdf.save(`${slug(CONFIG.appName)}_clients_${month}.pdf`);
 }

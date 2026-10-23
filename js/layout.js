@@ -4,7 +4,8 @@
  */
 import { CONFIG, isFirebaseConfigured, isDriveConfigured } from './config.js';
 import { requireMember, logout, canWrite, isAdmin, roleLabel } from './auth.js';
-import { watchTransactions, watchSettings } from './store.js';
+import { watchTransactions, watchSettings, watchClients } from './store.js';
+import { monthSummary } from './clients-lib.js';
 import { summarize } from './filters.js';
 import { esc, initials, longToday, currentMonthKey, formatINR, pct } from './utils.js';
 import { ic, icons, openModal } from './ui.js';
@@ -18,8 +19,14 @@ export const LOGO_SVG = `<svg viewBox="0 0 32 32" class="logo-mark" aria-hidden=
 const NAV = [
   { group: 'Overview', items: [
     { id: 'dashboard', href: 'dashboard.html', icon: 'layout-dashboard', label: 'Dashboard' },
-    { id: 'add-entry', href: 'add-entry.html', icon: 'circle-plus', label: 'New entry', write: true, kbd: 'N' },
-    { id: 'entries', href: 'entries.html', icon: 'receipt-text', label: 'Entries' },
+    { id: 'entries', href: 'entries.html', icon: 'receipt-text', label: 'All entries' },
+  ] },
+  { group: 'ODEA office', items: [
+    { id: 'add-entry', href: 'add-entry.html', icon: 'building-2', label: 'Office expense', write: true },
+  ] },
+  { group: 'Clients', items: [
+    { id: 'clients', href: 'clients.html', icon: 'hand-coins', label: 'Client payments' },
+    { id: 'add-client-expense', href: 'add-entry.html?scope=client', icon: 'briefcase', label: 'Client expense', write: true },
   ] },
   { group: 'Insights', items: [
     { id: 'reports', href: 'reports.html', icon: 'chart-column-big', label: 'Monthly reports' },
@@ -142,7 +149,7 @@ function wireShell() {
     else if (e.key.toLowerCase() === 'n' && document.body.dataset.canWrite === '1') location.href = 'add-entry.html';
     else if (e.key.toLowerCase() === 'g') { window.__g = Date.now(); }
     else if (window.__g && Date.now() - window.__g < 800) {
-      const map = { d: 'dashboard', e: 'entries', r: 'reports', b: 'bills', s: 'settings' };
+      const map = { d: 'dashboard', e: 'entries', c: 'clients', r: 'reports', b: 'bills', s: 'settings' };
       if (map[e.key]) location.href = `${map[e.key]}.html`;
       window.__g = 0;
     } else if (e.key === '?') showShortcuts();
@@ -150,23 +157,31 @@ function wireShell() {
 }
 
 function showShortcuts() {
-  const rows = [['N', 'New entry'], ['/', 'Search'], ['G then D', 'Dashboard'], ['G then E', 'Entries'], ['G then R', 'Reports'], ['G then B', 'Bills vault'], ['G then S', 'Settings'], ['Ctrl + Enter', 'Save the entry form'], ['Esc', 'Close dialogs'], ['?', 'This help']];
+  const rows = [['N', 'New entry'], ['/', 'Search'], ['G then D', 'Dashboard'], ['G then E', 'Entries'], ['G then C', 'Client payments'], ['G then R', 'Reports'], ['G then B', 'Bills vault'], ['G then S', 'Settings'], ['Ctrl + Enter', 'Save the entry form'], ['Esc', 'Close dialogs'], ['?', 'This help']];
   openModal({ title: 'Keyboard shortcuts', size: 'sm', body: `<dl class="shortcuts">${rows.map(([k, v]) => `<dt>${k.split(' ').map((x) => (['then', '+'].includes(x) ? `<span>${x}</span>` : `<kbd>${x}</kbd>`)).join(' ')}</dt><dd>${v}</dd>`).join('')}</dl>` });
 }
 
 /* ---------------- Notifications ---------------- */
 function wireNotifications(profile) {
-  let tx = [], settings = null;
+  let tx = [], settings = null, clients = [];
   const render = () => {
     const mk = currentMonthKey();
     const month = tx.filter((t) => t.date?.startsWith(mk));
     const s = summarize(month);
+    const office = summarize(month.filter((t) => (t.scope || 'office') === 'office'));
     const items = [];
     const budget = settings?.monthlyBudget || 0;
     if (budget) {
-      const used = pct(s.expense, budget);
-      if (used >= 100) items.push({ tone: 'danger', icon: 'flame', title: 'Monthly budget exceeded', text: `${formatINR(s.expense)} spent of ${formatINR(budget)} (${used.toFixed(0)}%)`, href: 'reports.html' });
-      else if (used >= 80) items.push({ tone: 'warning', icon: 'gauge', title: `${used.toFixed(0)}% of monthly budget used`, text: `${formatINR(budget - s.expense)} left this month`, href: 'reports.html' });
+      const used = pct(office.expense, budget);
+      if (used >= 100) items.push({ tone: 'danger', icon: 'flame', title: 'Office budget exceeded', text: `${formatINR(office.expense)} spent of ${formatINR(budget)} (${used.toFixed(0)}%)`, href: 'reports.html' });
+      else if (used >= 80) items.push({ tone: 'warning', icon: 'gauge', title: `${used.toFixed(0)}% of office budget used`, text: `${formatINR(budget - office.expense)} left this month`, href: 'reports.html' });
+    }
+    if (clients.length) {
+      const cs = monthSummary(clients, tx, mk);
+      const late = cs.rows.filter((r) => r.status === 'overdue');
+      if (late.length) items.push({ tone: 'danger', icon: 'alert-circle', title: `${late.length} client${late.length > 1 ? 's' : ''} overdue`, text: `${late.slice(0, 3).map((r) => r.client.name).join(', ')}${late.length > 3 ? '…' : ''} · ${formatINR(late.reduce((a, r) => a + r.remaining, 0), { decimals: false })} pending`, href: 'clients.html' });
+      const neg = cs.rows.filter((r) => r.balancePaise < 0);
+      if (neg.length) items.push({ tone: 'warning', icon: 'trending-down', title: `Spent more than received on ${neg.length} client${neg.length > 1 ? 's' : ''}`, text: neg.slice(0, 3).map((r) => r.client.name).join(', '), href: 'clients.html?view=monthly' });
     }
     if (s.missingBills) items.push({ tone: 'info', icon: 'file-warning', title: `${s.missingBills} expense${s.missingBills > 1 ? 's' : ''} without a bill`, text: 'This month — attach bills for clean records', href: 'entries.html?preset=month&type=expense&bill=without' });
     const pending = tx.filter((t) => t.pending).length;
@@ -182,6 +197,7 @@ function wireNotifications(profile) {
   };
   watchTransactions((list) => { tx = list; render(); }, () => {});
   watchSettings((s) => { settings = s; render(); });
+  watchClients((list) => { clients = list; render(); }, () => {});
 }
 
 /* ---------------- Boot ---------------- */

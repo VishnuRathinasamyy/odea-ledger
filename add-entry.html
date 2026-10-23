@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
   <link rel="stylesheet" href="css/responsive.css">
   <script src="js/theme-init.js"></script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
@@ -29,8 +30,8 @@
 
         <section class="page-head">
           <div class="page-head__text">
-            <span class="eyebrow" id="form-eyebrow">New entry</span>
-            <h2 id="form-title">Record a payment</h2>
+            <span class="eyebrow" id="form-eyebrow">New expense</span>
+            <h2 id="form-title">Record an expense</h2>
             <p id="form-sub">Fill the basics, attach the bill, save. Fields marked <span class="req-dot">*</span> are required.</p>
           </div>
           <div class="page-head__actions">
@@ -41,18 +42,27 @@
         <form class="entry-form" id="entry-form" novalidate autocomplete="off">
           <div class="entry-form__main">
 
-            <!-- 1. Amount & basics -->
+            <!-- 1. Who is it for -->
             <section class="panel form-section">
-              <header class="form-section__head"><span class="step">1</span><div><h3>Amount &amp; date</h3><p>Type a number or a sum like <code>1200+350*2</code></p></div></header>
-              <div class="form-grid">
-                <div class="field field--full">
-                  <span class="field__label">Entry type <span class="req">*</span></span>
-                  <div class="segmented segmented--type segmented--lg" role="radiogroup" aria-label="Entry type">
-                    <label><input type="radio" name="type" value="expense" checked><span><i data-lucide="arrow-up-right"></i>Expense · money out</span></label>
-                    <label><input type="radio" name="type" value="income"><span><i data-lucide="arrow-down-left"></i>Income · money in</span></label>
-                  </div>
-                </div>
+              <header class="form-section__head"><span class="step">1</span><div><h3>Who is this payment for?</h3><p>ODEA's own office, or money spent on a client</p></div></header>
+              <input type="hidden" name="type" value="expense">
+              <div class="scope-switch" role="radiogroup" aria-label="Expense for">
+                <label><input type="radio" name="scope" value="office" checked><span class="scope-opt"><i data-lucide="building-2" class="ic"></i><span><strong>ODEA office</strong><small>Rent, supplies, salaries, bills</small></span></span></label>
+                <label><input type="radio" name="scope" value="client"><span class="scope-opt"><i data-lucide="briefcase" class="ic"></i><span><strong>For a client</strong><small>Shoots, ad spend, travel, props</small></span></span></label>
+              </div>
+              <div class="field client-field" data-field="clientId" hidden>
+                <label class="field__label" for="clientId">Client <span class="req">*</span></label>
+                <select class="select" id="clientId" name="clientId"></select>
+                <div class="cbal" id="cbal"></div>
+                <span class="field__hint" id="client-hint"></span>
+                <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+              </div>
+            </section>
 
+            <!-- 2. Payment details -->
+            <section class="panel form-section">
+              <header class="form-section__head"><span class="step">2</span><div><h3>Payment details</h3><p>Amount can be a sum like <code>1200+350*2</code></p></div></header>
+              <div class="form-grid">
                 <div class="field field--amount field--full" data-field="amount">
                   <label class="field__label" for="amount">Amount <span class="req">*</span></label>
                   <div class="amount-input">
@@ -68,10 +78,22 @@
                   <span class="field__error" id="amount-err"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
                 </div>
 
+                <div class="field field--full" data-field="title">
+                  <label class="field__label" for="title">Reason <span class="req">*</span></label>
+                  <input class="input" id="title" name="title" maxlength="120" placeholder="e.g. October office rent, Printer toner, Product shoot">
+                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+
                 <div class="field" data-field="date">
                   <label class="field__label" for="date">Date <span class="req">*</span></label>
                   <input class="input" type="date" id="date" name="date" required>
                   <div class="date-quick"><button type="button" data-day="0">Today</button><button type="button" data-day="-1">Yesterday</button></div>
+                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
+                </div>
+
+                <div class="field" data-field="category">
+                  <label class="field__label" for="category">Category <span class="req">*</span></label>
+                  <select class="select" id="category" name="category"></select>
                   <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
                 </div>
 
@@ -80,52 +102,34 @@
                   <select class="select" id="paymentMethod" name="paymentMethod"></select>
                   <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
                 </div>
-              </div>
-            </section>
 
-            <!-- 2. What was it -->
-            <section class="panel form-section">
-              <header class="form-section__head"><span class="step">2</span><div><h3>What was it for?</h3><p>Payees you have used before are remembered</p></div></header>
-              <div class="form-grid">
-                <div class="field field--full" data-field="title">
-                  <label class="field__label" for="title">Title <span class="req">*</span></label>
-                  <input class="input" id="title" name="title" maxlength="120" placeholder="e.g. October office rent, Printer toner, Meta ads top-up">
-                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
-                </div>
-                <div class="field" data-field="category">
-                  <label class="field__label" for="category">Category <span class="req">*</span></label>
-                  <select class="select" id="category" name="category"></select>
-                  <span class="field__error"><i data-lucide="alert-circle" class="ic--xs"></i><span></span></span>
-                </div>
                 <div class="field" data-field="vendor">
-                  <label class="field__label" for="vendor">Paid to / Vendor <span class="opt">optional</span></label>
+                  <label class="field__label" for="vendor">Paid to <span class="opt">optional</span></label>
                   <input class="input" id="vendor" name="vendor" maxlength="120" list="dl-vendor" placeholder="Who received the money?">
                   <datalist id="dl-vendor"></datalist>
                   <span class="field__hint" id="vendor-hint"></span>
                 </div>
-                <div class="field" data-field="gstRate">
-                  <label class="field__label" for="gstRate">GST included <span class="opt">optional</span></label>
-                  <select class="select" id="gstRate" name="gstRate"></select>
-                  <span class="field__hint" id="gst-hint">For bills with a GST invoice</span>
-                </div>
-                <div class="field">
-                  <label class="field__label" for="client">Client <span class="opt">optional</span></label>
-                  <input class="input" id="client" name="client" maxlength="80" list="dl-client" placeholder="Leave empty for office spend">
-                  <datalist id="dl-client"></datalist>
-                </div>
-                <div class="field">
-                  <label class="field__label" for="project">Project / campaign <span class="opt">optional</span></label>
-                  <input class="input" id="project" name="project" maxlength="80" list="dl-project" placeholder="e.g. Diwali campaign">
-                  <datalist id="dl-project"></datalist>
-                </div>
-                <div class="field field--full">
-                  <label class="field__label" for="description">Description <span class="opt">optional</span></label>
-                  <textarea class="textarea" id="description" name="description" maxlength="1000" rows="3" placeholder="Anything that explains this payment"></textarea>
-                </div>
-                <div class="field field--full">
-                  <label class="field__label" for="notes">Additional notes <span class="opt">optional</span></label>
-                  <textarea class="textarea" id="notes" name="notes" maxlength="2000" rows="2" placeholder="Invoice no., approval, reimbursement status…"></textarea>
-                </div>
+
+                <details class="more-details" id="more-details">
+                  <summary><i data-lucide="chevron-right"></i>More details <span class="opt">GST, project, notes — optional</span></summary>
+                  <div class="form-grid">
+                    <div class="field" data-field="gstRate">
+                      <label class="field__label" for="gstRate">GST included</label>
+                      <select class="select" id="gstRate" name="gstRate"></select>
+                      <span class="field__hint" id="gst-hint">For bills with a GST invoice</span>
+                    </div>
+                    <div class="field">
+                      <label class="field__label" for="project">Project / campaign</label>
+                      <input class="input" id="project" name="project" maxlength="80" list="dl-project" placeholder="e.g. Diwali campaign">
+                      <datalist id="dl-project"></datalist>
+                    </div>
+                    <div class="field field--full">
+                      <label class="field__label" for="notes">Notes</label>
+                      <textarea class="textarea" id="notes" name="notes" maxlength="2000" rows="2" placeholder="Invoice no., approval, anything useful"></textarea>
+                    </div>
+                    <input type="hidden" id="description" name="description">
+                  </div>
+                </details>
               </div>
             </section>
           </div>
@@ -162,6 +166,7 @@
               <div class="receipt__amount" id="pv-amount">₹0.00</div>
               <div class="receipt__type" id="pv-type">Expense</div>
               <dl class="receipt__rows">
+                <div><dt>For</dt><dd id="pv-for">ODEA office</dd></div>
                 <div><dt>Date</dt><dd id="pv-date">—</dd></div>
                 <div><dt>Category</dt><dd id="pv-cat">—</dd></div>
                 <div><dt>Paid to</dt><dd id="pv-vendor">—</dd></div>

@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
   <link rel="stylesheet" href="css/responsive.css">
   <script src="js/theme-init.js"></script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
@@ -40,6 +41,7 @@
         <div class="settings">
           <nav class="settings__nav" aria-label="Settings sections">
             <a href="#budget" data-requires="admin"><i data-lucide="gauge"></i>Monthly budget</a>
+            <a href="#clients" data-requires="admin"><i data-lucide="briefcase"></i>Clients</a>
             <a href="#categories" data-requires="admin"><i data-lucide="tags"></i>Categories</a>
             <a href="#team" data-requires="admin"><i data-lucide="users"></i>Team access</a>
             <a href="#drive"><i data-lucide="hard-drive"></i>Google Drive</a>
@@ -58,9 +60,18 @@
               <p class="field__hint" id="budget-hint"></p>
             </section>
 
+            <!-- Clients -->
+            <section class="panel setting" id="clients" data-requires="admin">
+              <div class="setting__head"><h3>Clients</h3><p>Every client with their fixed monthly fee. They appear in the client expense and payment dropdowns. Archive a client to stop billing — history is kept.</p></div>
+              <div class="clist" id="client-list"></div>
+              <div class="setting__row"><button class="btn btn--dark" type="button" id="client-add"><i data-lucide="user-plus"></i>Add client</button>
+                <a class="btn btn--ghost" href="clients.html"><i data-lucide="hand-coins"></i>Open client payments</a></div>
+            </section>
+
             <!-- Categories -->
             <section class="panel setting" id="categories" data-requires="admin">
               <div class="setting__head"><h3>Categories</h3><p>Shown in the entry form. Removing a category doesn't change past entries.</p></div>
+              <div class="segmented" role="tablist" aria-label="Category list"><button type="button" class="is-active" data-catlist="categories">Office expenses</button><button type="button" data-catlist="clientCategories">Client expenses</button></div>
               <div class="cat-list" id="cat-list"></div>
               <form class="setting__row" id="cat-form">
                 <input class="input" id="cat-input" maxlength="60" placeholder="New category name, e.g. Courier">

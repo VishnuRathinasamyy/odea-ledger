@@ -28,10 +28,10 @@ function syncControls() {
   $('pick-range').hidden = f.preset !== 'range';
   $('f-month').value = f.month || currentMonthKey();
   $('f-from').value = f.from; $('f-to').value = f.to;
-  $('f-q').value = f.q; $('f-type').value = f.type; $('f-payment').value = f.payment; $('f-bill').value = f.bill;
+  $('f-q').value = f.q; $('f-scope').value = f.scope || ''; $('f-type').value = f.type; $('f-payment').value = f.payment; $('f-bill').value = f.bill;
   $('f-category').value = f.category; $('f-client').value = f.client; $('f-size').value = String(f.size);
   const d = defaultFilters();
-  $('f-clear').hidden = ['type', 'category', 'payment', 'client', 'bill', 'q'].every((k) => !f[k]) && f.preset === d.preset;
+  $('f-clear').hidden = ['scope', 'type', 'category', 'payment', 'client', 'bill', 'q'].every((k) => !f[k]) && f.preset === d.preset;
   document.querySelectorAll('.th-sort').forEach((b) => {
     const on = b.dataset.sort === f.sort; b.classList.toggle('is-sorted', on);
     b.lastElementChild.outerHTML = ic(on ? (f.dir === 'asc' ? 'arrow-up' : 'arrow-down') : 'arrow-down-up');
@@ -56,7 +56,7 @@ $('pick-month').addEventListener('click', (e) => { const b = e.target.closest('[
 $('f-from').addEventListener('change', (e) => update({ from: e.target.value }));
 $('f-to').addEventListener('change', (e) => update({ to: e.target.value }));
 $('f-q').addEventListener('input', debounce((e) => update({ q: e.target.value.trim() }), 220));
-[['f-type', 'type'], ['f-category', 'category'], ['f-payment', 'payment'], ['f-client', 'client'], ['f-bill', 'bill']]
+[['f-scope', 'scope'], ['f-type', 'type'], ['f-category', 'category'], ['f-payment', 'payment'], ['f-client', 'client'], ['f-bill', 'bill']]
   .forEach(([id, key]) => $(id).addEventListener('change', (e) => update({ [key]: e.target.value })));
 $('f-size').addEventListener('change', (e) => update({ size: Number(e.target.value) }));
 $('f-clear').addEventListener('click', () => { const d = defaultFilters(); update({ ...d, size: f.size }); });
@@ -76,7 +76,7 @@ watchTransactions((list) => { tx = list; loaded = true; fillDynamicSelects(); re
 
 function fillDynamicSelects() {
   const cats = [...new Set([...categories, ...tx.map((t) => t.category)])].filter(Boolean);
-  const clients = [...new Set(tx.map((t) => t.client).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const clients = [...new Set(tx.map((t) => t.clientName || t.client).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   $('f-category').innerHTML = '<option value="">All categories</option>' + cats.map((c) => `<option>${esc(c)}</option>`).join('');
   $('f-client').innerHTML = '<option value="">All clients</option>' + clients.map((c) => `<option>${esc(c)}</option>`).join('');
   $('f-category').value = f.category; $('f-client').value = f.client;
@@ -116,12 +116,12 @@ function render() {
       <tr data-id="${t.id}" tabindex="0">
         <td class="cell-sno" data-label="S.No">${start + i + 1}</td>
         <td data-label="Date"><div class="cell-date"><span>${formatDate(t.date)}</span><small class="cell-ref">${esc(t.refNo || t.id.slice(0, 8))}${t.pending ? ' <span class="tag tag--pending">sync</span>' : ''}</small></div></td>
-        <td data-label="Title"><div class="cell-title"><strong>${esc(t.title)}</strong>${t.vendor ? `<small>${esc(t.vendor)}</small>` : ''}</div></td>
+        <td data-label="Title"><div class="cell-title"><strong>${esc(t.title)}</strong>${t.vendor && t.vendor !== t.clientName ? `<small>${esc(t.vendor)}</small>` : ''}</div></td>
         <td data-label="Category"><span class="tag">${esc(t.category)}</span></td>
         <td data-label="Type">${typeTag(t)}</td>
         <td class="t-right" data-label="Amount"><span class="amount amount--${t.type}">${t.type === 'income' ? '+' : '−'} ${formatINR(t.amount)}</span></td>
         <td class="t-center" data-label="Bill">${billCell(t)}</td>
-        <td class="cell-muted cell-client" data-label="Client">${esc([t.client, t.project].filter(Boolean).join(' · ') || '—')}</td>
+        <td class="cell-client" data-label="Client">${t.scope === 'client' ? `<a class="tag tag--client" href="client.html?id=${encodeURIComponent(t.clientId)}">${ic('briefcase', 'ic--xs')}${esc(t.clientName || t.client)}</a>` : `<span class="cell-muted">${esc(t.client || 'Office')}</span>`}${t.project ? `<small class="muted"> · ${esc(t.project)}</small>` : ''}</td>
         <td class="cell-muted" data-label="Paid via">${esc(t.paymentMethod || '—')}</td>
         <td class="t-right cell-actions"><div class="row-actions">
           ${ctx.canWrite ? `<a class="icon-btn icon-btn--sm" href="add-entry.html?id=${encodeURIComponent(t.id)}" title="Edit" aria-label="Edit">${ic('pencil')}</a>

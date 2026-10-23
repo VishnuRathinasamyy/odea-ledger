@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Client · ODEA Ledger</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#14161B">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/clients.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <script src="js/theme-init.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" defer></script>
+</head>
+<body class="is-booting">
+  <div class="app" id="app">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="sidebar-scrim" id="scrim"></div>
+    <div class="main">
+      <header class="topbar" id="topbar"></header>
+      <main class="content" id="content">
+
+        <a class="back-link" href="clients.html"><i data-lucide="arrow-left"></i>All clients</a>
+
+        <section class="page-head" id="d-head">
+          <div class="page-head__text">
+            <span class="eyebrow" id="d-eyebrow">Client</span>
+            <h2 id="d-name">—</h2>
+            <p id="d-sub">&nbsp;</p>
+          </div>
+          <div class="page-head__actions">
+            <button class="btn btn--light" type="button" id="d-edit" data-requires="admin"><i data-lucide="pencil"></i><span>Edit</span></button>
+            <button class="btn btn--light" type="button" id="d-fee" data-requires="admin"><i data-lucide="indian-rupee"></i><span>Change fee</span></button>
+            <a class="btn btn--light" id="d-expense" data-requires="write"><i data-lucide="arrow-up-right"></i><span>Add expense</span></a>
+            <button class="btn btn--primary" type="button" id="d-pay" data-requires="write"><i data-lucide="hand-coins"></i><span>Record payment</span></button>
+          </div>
+        </section>
+
+        <section class="kpis">
+          <article class="kpi kpi--hero"><div class="kpi__top"><span class="kpi__label" id="d-m-label">This month</span><span class="kpi__icon"><i data-lucide="calendar-check"></i></span></div>
+            <div class="kpi__value money" id="d-m-rec">—</div>
+            <div class="budget"><div class="meter"><div class="meter__fill" id="d-m-bar" style="width:0"></div></div><div class="kpi__meta" id="d-m-meta">&nbsp;</div></div></article>
+          <article class="kpi kpi--income"><div class="kpi__top"><span class="kpi__label">Total received</span><span class="kpi__icon"><i data-lucide="arrow-down-left"></i></span></div>
+            <div class="kpi__value money" id="d-t-rec">—</div><div class="kpi__meta" id="d-t-rec-m">All time</div></article>
+          <article class="kpi kpi--expense"><div class="kpi__top"><span class="kpi__label">Total spent on client</span><span class="kpi__icon"><i data-lucide="arrow-up-right"></i></span></div>
+            <div class="kpi__value money" id="d-t-sp">—</div><div class="kpi__meta" id="d-t-sp-m">All time</div></article>
+          <article class="kpi"><div class="kpi__top"><span class="kpi__label">Balance</span><span class="kpi__icon"><i data-lucide="scale"></i></span></div>
+            <div class="kpi__value money" id="d-t-bal">—</div><div class="kpi__meta" id="d-t-bal-m">&nbsp;</div></article>
+        </section>
+
+        <div class="grid grid--2-1">
+          <section class="panel">
+            <div class="panel__head"><div><h3 class="panel__title">Month by month</h3><p class="panel__sub">Fixed fee, what came in, what was spent</p></div></div>
+            <div class="panel__body panel__body--flush"><div class="table-wrap"><table class="table table--compact">
+              <thead><tr><th>Month</th><th class="t-right">Fee</th><th class="t-right">Received</th><th class="t-right">Remaining</th><th>Status</th><th class="t-right">Spent</th><th class="t-right">Balance</th></tr></thead>
+              <tbody id="d-months"></tbody>
+            </table></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel__head"><div><h3 class="panel__title">Details</h3></div></div>
+            <div class="panel__body"><dl class="about about--client" id="d-info"></dl></div>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel__head"><div><h3 class="panel__title">Payments received</h3><p class="panel__sub" id="d-pay-sub">&nbsp;</p></div></div>
+          <div class="panel__body panel__body--flush"><div class="table-wrap"><table class="table table--compact">
+            <thead><tr><th>Date</th><th>For month</th><th class="t-right">Amount</th><th>Via</th><th>Reference / note</th><th>Entered by</th><th class="t-right"><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody id="d-payments"></tbody>
+          </table></div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head"><div><h3 class="panel__title">Spent on this client</h3><p class="panel__sub" id="d-exp-sub">&nbsp;</p></div>
+            <a class="link" id="d-exp-all">View in entries <i data-lucide="arrow-right" class="ic--xs"></i></a></div>
+          <div class="panel__body panel__body--flush"><div class="table-wrap"><table class="table table--compact">
+            <thead><tr><th>Date</th><th>Reason</th><th>Category</th><th class="t-right">Amount</th><th class="t-center">Bill</th><th class="t-right"><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody id="d-expenses"></tbody>
+          </table></div></div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <script type="module" src="js/pages/client.js"></script>
+</body>
+</html>

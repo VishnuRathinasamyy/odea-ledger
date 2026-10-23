@@ -10,7 +10,8 @@ const $ = (id) => document.getElementById(id);
 const grid = $('v-grid');
 
 let data = null, tx = [], linkMap = new Map();
-const state = { folder: '', q: '', link: '', sort: 'new' };
+const state = { folder: '', q: '', link: '', sort: 'new', page: 1, size: 12 };
+const PAGE_SIZES = [12, 24, 48];
 
 watchTransactions((list) => {
   tx = list;
@@ -75,6 +76,14 @@ function render() {
   const sorters = { new: (a, b) => (b.created || '').localeCompare(a.created || ''), old: (a, b) => (a.created || '').localeCompare(b.created || ''), name: (a, b) => a.name.localeCompare(b.name), size: (a, b) => (b.size || 0) - (a.size || 0) };
   list.sort(sorters[state.sort]);
 
+  // Pagination — only the current page's thumbnails are ever requested from Drive
+  const pages = Math.max(1, Math.ceil(list.length / state.size));
+  if (state.page > pages) state.page = pages;
+  const start = (state.page - 1) * state.size;
+  const total = list.length;
+  list = list.slice(start, start + state.size);
+  renderPager(total, pages, start);
+
   if (!files.length) {
     grid.classList.add('is-state');
     grid.innerHTML = emptyState({ icon: 'folder-open', title: 'The bills folder is empty', message: 'Bills you attach to entries are saved here automatically, inside a folder for each month.',
@@ -112,6 +121,22 @@ function render() {
   lazyThumbs();
 }
 
+function renderPager(total, pages, start) {
+  const foot = $('v-pager-foot');
+  foot.hidden = total <= PAGE_SIZES[0];
+  if (foot.hidden) return;
+  $('v-pager-info').textContent = `Showing ${start + 1}–${Math.min(start + state.size, total)} of ${total} bills`;
+  const nums = [];
+  for (let p = 1; p <= pages; p++) {
+    if (p === 1 || p === pages || Math.abs(p - state.page) <= 1) nums.push(p);
+    else if (nums[nums.length - 1] !== '…') nums.push('…');
+  }
+  $('v-pager').innerHTML = `<button type="button" data-page="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''} aria-label="Previous page">${ic('chevron-left')}</button>
+    ${nums.map((p) => (p === '…' ? '<span class="pager__gap">…</span>' : `<button type="button" data-page="${p}" class="${p === state.page ? 'is-active' : ''}">${p}</button>`)).join('')}
+    <button type="button" data-page="${state.page + 1}" ${state.page >= pages ? 'disabled' : ''} aria-label="Next page">${ic('chevron-right')}</button>`;
+  icons($('v-pager'));
+}
+
 /* Thumbnails load only when scrolled into view, through the authenticated proxy */
 let observer;
 function lazyThumbs() {
@@ -119,18 +144,27 @@ function lazyThumbs() {
   observer = new IntersectionObserver((entries) => entries.forEach((en) => {
     if (!en.isIntersecting) return;
     observer.unobserve(en.target);
-    const img = en.target; const id = img.dataset.src;
+    const img = en.target.querySelector('img[data-src]'); if (!img) return;
+    const id = img.dataset.src;
     getBillURL(id, 'thumb').then((url) => { img.onload = () => { img.hidden = false; img.previousElementSibling?.remove(); }; img.src = url; })
       .catch(() => { const ph = img.previousElementSibling; if (ph) { ph.innerHTML = ic('image-off'); ph.title = 'Preview unavailable'; icons(ph); } });
   }), { rootMargin: '200px' });
-  grid.querySelectorAll('img[data-src]').forEach((i) => observer.observe(i));
+  // Watch the (always visible) thumbnail box, not the hidden <img> — hidden elements never "intersect".
+  grid.querySelectorAll('img[data-src]').forEach((i) => observer.observe(i.closest('.bill-card__thumb')));
 }
 
 /* ---------------- Interactions ---------------- */
-$('v-folders').addEventListener('click', (e) => { const b = e.target.closest('[data-folder]'); if (b) { state.folder = b.dataset.folder; render(); } });
-$('v-q').addEventListener('input', debounce((e) => { state.q = e.target.value.trim(); render(); }, 200));
-$('v-link').addEventListener('change', (e) => { state.link = e.target.value; render(); });
-$('v-sort').addEventListener('change', (e) => { state.sort = e.target.value; render(); });
+$('v-folders').addEventListener('click', (e) => { const b = e.target.closest('[data-folder]'); if (b) { state.folder = b.dataset.folder; state.page = 1; render(); } });
+$('v-q').addEventListener('input', debounce((e) => { state.q = e.target.value.trim(); state.page = 1; render(); }, 200));
+$('v-link').addEventListener('change', (e) => { state.link = e.target.value; state.page = 1; render(); });
+$('v-sort').addEventListener('change', (e) => { state.sort = e.target.value; state.page = 1; render(); });
+$('v-size').innerHTML = PAGE_SIZES.map((n) => `<option value="${n}">${n}</option>`).join('');
+$('v-size').addEventListener('change', (e) => { state.size = Number(e.target.value); state.page = 1; render(); });
+$('v-pager').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-page]'); if (!b || b.disabled) return;
+  state.page = Number(b.dataset.page); render();
+  document.querySelector('.vault').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 $('v-refresh').addEventListener('click', load);
 grid.addEventListener('click', (e) => {
   if (e.target.closest('[data-retry]')) return load();

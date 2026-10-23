@@ -29,6 +29,7 @@ service cloud.firestore {
       return d.keys().hasAll(['date', 'month', 'type', 'category', 'title', 'amountPaise', 'paymentMethod', 'createdBy', 'createdAt', 'updatedAt'])
         && d.keys().hasOnly(['refNo', 'date', 'month', 'type', 'category', 'title', 'description', 'amountPaise',
                              'paymentMethod', 'vendor', 'client', 'project', 'notes', 'gstRate', 'bill',
+                             'scope', 'clientId', 'clientName', 'forMonth',
                              'createdBy', 'updatedBy', 'createdAt', 'updatedAt'])
         && d.date is string && d.date.matches('^20[0-9]{2}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$')
         && d.month is string && d.month.matches('^20[0-9]{2}-(0[1-9]|1[0-2])$') && d.date.matches('^' + d.month + '-[0-9]{2}$')
@@ -40,7 +41,11 @@ service cloud.firestore {
         && optStr(d, 'refNo', 20) && optStr(d, 'description', 1000) && optStr(d, 'vendor', 120)
         && optStr(d, 'client', 80) && optStr(d, 'project', 80) && optStr(d, 'notes', 2000)
         && (!('gstRate' in d) || d.gstRate in [0, 5, 12, 18, 28])
-        && (!('bill' in d) || validBill(d.bill));
+        && (!('bill' in d) || validBill(d.bill))
+        && (!('scope' in d) || d.scope in ['office', 'client'])
+        && (!('scope' in d) || d.scope != 'client' || (d.clientId is string && d.clientId.size() > 0 && d.clientId.size() < 100))
+        && optStr(d, 'clientName', 100)
+        && (!('forMonth' in d) || (d.forMonth is string && d.forMonth.matches('^20[0-9]{2}-(0[1-9]|1[0-2])$')));
     }
 
     // ---------- Transactions ----------
@@ -65,9 +70,29 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read: if isMember();
       allow write: if isAdmin() && docId == 'app'
-        && request.resource.data.keys().hasOnly(['categories', 'monthlyBudgetPaise', 'updatedBy', 'updatedAt'])
+        && request.resource.data.keys().hasOnly(['categories', 'clientCategories', 'monthlyBudgetPaise', 'updatedBy', 'updatedAt'])
         && (!('categories' in request.resource.data) || (request.resource.data.categories is list && request.resource.data.categories.size() <= 60))
+        && (!('clientCategories' in request.resource.data) || (request.resource.data.clientCategories is list && request.resource.data.clientCategories.size() <= 60))
         && (!('monthlyBudgetPaise' in request.resource.data) || (request.resource.data.monthlyBudgetPaise is int && request.resource.data.monthlyBudgetPaise >= 0));
+    }
+
+    // ---------- Clients (admins manage the list and fees) ----------
+    function validClient(d) {
+      return d.keys().hasOnly(['name', 'feeHistory', 'startMonth', 'dueDay', 'contactName', 'phone', 'notes', 'archivedFrom', 'logo',
+                               'createdBy', 'updatedBy', 'createdAt', 'updatedAt'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 100
+        && d.feeHistory is list && d.feeHistory.size() <= 120
+        && (!('startMonth' in d) || d.startMonth == null || (d.startMonth is string && d.startMonth.matches('^20[0-9]{2}-(0[1-9]|1[0-2])$')))
+        && (!('archivedFrom' in d) || d.archivedFrom == null || (d.archivedFrom is string && d.archivedFrom.matches('^20[0-9]{2}-(0[1-9]|1[0-2])$')))
+        && (!('dueDay' in d) || d.dueDay == null || (d.dueDay is int && d.dueDay >= 1 && d.dueDay <= 31))
+        && optStr(d, 'contactName', 100) && optStr(d, 'phone', 30) && optStr(d, 'notes', 1000)
+        && (!('logo' in d) || d.logo == null || (d.logo is string && d.logo.size() < 40000 && d.logo.matches('^data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$')));
+    }
+    match /clients/{id} {
+      allow read: if isMember();
+      allow create: if isAdmin() && validClient(request.resource.data) && request.resource.data.createdBy == myEmail();
+      allow update: if isAdmin() && validClient(request.resource.data) && request.resource.data.createdBy == resource.data.createdBy;
+      allow delete: if isAdmin();
     }
 
     // ---------- Team (document id = lowercase email) ----------
