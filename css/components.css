@@ -234,3 +234,10 @@
 .tag--client { background: var(--info-soft); color: var(--info); gap: 4px; }
 .tag--client:hover { filter: brightness(.95); }
 .tag--client .ic { width: 12px; height: 12px; }
+
+
+
+/* Clickable summary cards */
+.kpi--link { cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; }
+.kpi--link:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); border-color: var(--border-strong); }
+.kpi--link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

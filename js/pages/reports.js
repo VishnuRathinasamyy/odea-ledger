@@ -48,7 +48,8 @@ function render() {
   $('r-inc').textContent = formatINR(s.income);
   $('r-inc-d').innerHTML = deltaBadge(s.income, p.income, { invert: true, suffix: `vs ${monthLabel(prev, true)}` });
   $('r-net').textContent = (s.net < 0 ? '−' : '') + formatINR(Math.abs(s.net));
-  $('r-net-d').innerHTML = `<span>Income − expenses</span>${budget ? `<span>· budget ${pct(s.expense, budget).toFixed(0)}% used</span>` : ''}`;
+  const officeSpent = summarize(tx.filter((t) => t.date.startsWith(mk) && (t.scope || 'office') === 'office')).expense;
+  $('r-net-d').innerHTML = `<span>Income − expenses</span>${budget ? `<span>· office budget ${pct(officeSpent, budget).toFixed(0)}% used</span>` : ''}`;
   $('r-count').textContent = s.count;
   const days = isCurrent ? Number(todayISO().slice(8)) : daysInMonth(mk);
   $('r-count-d').innerHTML = `<span>${formatINR(s.expense / days)} / day avg</span>${s.gst ? `<span>· GST ${formatINR(s.gst)}</span>` : ''}`;
@@ -72,7 +73,7 @@ function renderDaily(cur, days) {
   exp.forEach((t) => { const d = Number(t.date.slice(8)) - 1; if (d < days) daily[d] += t.amountPaise; });
   let run = 0;
   lineDaily('r-daily', box.querySelector('canvas'), {
-    labels: daily.map((_, i) => `${i + 1} ${monthShort(mk)}`), daily: daily.map(fromPaise), cumulative: daily.map((v) => fromPaise(run += v)), budget,
+    labels: daily.map((_, i) => `${i + 1} ${monthShort(mk)}`), daily: daily.map(fromPaise), cumulative: daily.map((v) => fromPaise(run += v)), budget: scope === 'office' ? budget : 0,
   });
 }
 

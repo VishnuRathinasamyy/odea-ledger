@@ -45,7 +45,7 @@
 
         <!-- Required summary cards -->
         <section class="kpis" aria-label="Summary">
-          <article class="kpi kpi--hero">
+          <article class="kpi kpi--hero kpi--link" data-href="entries.html?preset=month&scope=office&type=expense" tabindex="0" role="link" title="See this month's office expenses">
             <div class="kpi__top"><span class="kpi__label">Office expenses this month</span><span class="kpi__icon"><i data-lucide="wallet"></i></span></div>
             <div class="kpi__value money" id="k-month">—</div>
             <div class="budget" id="k-budget">
@@ -53,17 +53,17 @@
               <div class="kpi__meta"><span id="k-budget-text">No budget set</span></div>
             </div>
           </article>
-          <article class="kpi kpi--expense">
+          <article class="kpi kpi--expense kpi--link" data-href="entries.html?preset=today&type=expense" tabindex="0" role="link" title="See today's expenses">
             <div class="kpi__top"><span class="kpi__label">Spent today</span><span class="kpi__icon"><i data-lucide="calendar-check"></i></span></div>
             <div class="kpi__value money" id="k-today">—</div>
             <div class="kpi__meta" id="k-today-meta">&nbsp;</div>
           </article>
-          <article class="kpi">
-            <div class="kpi__top"><span class="kpi__label">Office expenses last month</span><span class="kpi__icon"><i data-lucide="history"></i></span></div>
+          <article class="kpi kpi--income kpi--link" data-href="entries.html?preset=today&type=income" tabindex="0" role="link" title="See money received today">
+            <div class="kpi__top"><span class="kpi__label">Received today</span><span class="kpi__icon"><i data-lucide="trending-up"></i></span></div>
             <div class="kpi__value money" id="k-last">—</div>
             <div class="kpi__meta" id="k-last-meta">&nbsp;</div>
           </article>
-          <article class="kpi kpi--info">
+          <article class="kpi kpi--info kpi--link" data-href="clients.html" tabindex="0" role="link" title="Open client payments">
             <div class="kpi__top"><span class="kpi__label">Client payments received</span><span class="kpi__icon"><i data-lucide="hand-coins"></i></span></div>
             <div class="kpi__value money" id="k-count">—</div>
             <div class="kpi__meta" id="k-count-meta">&nbsp;</div>
@@ -81,7 +81,7 @@
 
         <div class="grid grid--2-1">
           <section class="panel">
-            <div class="panel__head"><div><h3 class="panel__title">Daily spending</h3><p class="panel__sub" id="daily-sub">This month</p></div></div>
+            <div class="panel__head"><div><h3 class="panel__title">Office spending by day</h3><p class="panel__sub" id="daily-sub">This month</p></div></div>
             <div class="panel__body"><div class="chart-box" id="daily-box"><canvas id="chart-daily"></canvas></div></div>
           </section>
           <section class="panel">

@@ -49,10 +49,12 @@ function render() {
   /* KPI cards */
   countUp($('k-month'), sO.expense, fmt);
   countUp($('k-today'), sT.expense, fmt);
-  countUp($('k-last'), sL.expense, fmt);
+  countUp($('k-last'), sT.income, fmt);
   countUp($('k-count'), cs.received, fmt);
   $('k-today-meta').innerHTML = deltaBadge(sT.expense, yesterday.expense, { suffix: 'vs yesterday' });
-  $('k-last-meta').innerHTML = `<span>${monthLabel(lastMk)}</span><span>· ${sL.expenseCount} expenses</span>`;
+  $('k-last-meta').innerHTML = sT.incomeCount
+    ? `<span>${sT.incomeCount} payment${sT.incomeCount === 1 ? '' : 's'}</span>${deltaBadge(sT.income, yesterday.income, { invert: true, suffix: 'vs yesterday' })}`
+    : `<span>Nothing received yet today</span>`;
   $('k-count-meta').innerHTML = cs.expected
     ? `<span>of ${formatINR(cs.expected, { decimals: false })}</span>${cs.remaining ? `<span class="tag tag--expense">${formatINR(cs.remaining, { decimals: false })} pending</span>` : '<span class="tag tag--income">All collected</span>'}`
     : `<a class="link" href="clients.html">Set up clients</a>`;
@@ -82,7 +84,7 @@ function render() {
     : '—';
 
   /* Charts — never show sample data; show empty states instead */
-  renderDaily(month, mk, budget);
+  renderDaily(month.filter(isOffice), mk, budget);
   renderCategories(month);
   renderTrend(mk);
 
@@ -113,7 +115,7 @@ function render() {
 function renderDaily(month, mk, budget) {
   const box = $('daily-box');
   const expenses = month.filter((t) => t.type === 'expense');
-  $('daily-sub').textContent = `${monthLabel(mk)} · bars per day, line = running total`;
+  $('daily-sub').textContent = `ODEA office · ${monthLabel(mk)} · bars per day, line = running total`;
   if (!expenses.length) { box.innerHTML = emptyState({ icon: 'chart-no-axes-column', title: 'No spending this month yet', message: 'The daily chart appears after the first expense.', compact: true }); return; }
   if (!box.querySelector('canvas')) box.innerHTML = '<canvas id="chart-daily"></canvas>';
   const days = Number(todayISO().startsWith(mk) ? todayISO().slice(8) : daysInMonth(mk));
@@ -168,6 +170,13 @@ $('recent').addEventListener('click', (e) => {
 });
 $('recent').addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.closest('[data-id]')?.click(); });
 wireBills($('recent'), (id) => tx.find((t) => t.id === id));
+
+/* Summary cards open their page */
+document.querySelectorAll('.kpi[data-href]').forEach((card) => {
+  const go = (e) => { if (!e.target.closest('a')) location.href = card.dataset.href; };
+  card.addEventListener('click', go);
+  card.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(e); });
+});
 
 $('dash-pdf').addEventListener('click', async (e) => {
   const btn = e.currentTarget; const html = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spinner spinner--sm"></span><span>Preparing…</span>';
